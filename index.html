@@ -201,13 +201,11 @@
     
     <div class="main-content">
         <div class="container mx-auto px-6 py-8">
-            <!-- Ивенты -->
             <div id="eventsTab" class="tab-content">
                 <button id="newEventBtn" class="btn-green px-6 py-3 rounded-xl font-semibold text-white mb-6">+ Быстрый ивент (уже проведён)</button>
                 <div id="eventsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
             </div>
 
-            <!-- Статистика -->
             <div id="statsTab" class="tab-content" style="display:none;">
                 <div class="card p-6 bg-white/5 rounded-xl">
                     <h3 class="text-white font-semibold mb-4 text-xl">📈 Статистика</h3>
@@ -225,11 +223,10 @@
                 </div>
             </div>
 
-            <!-- Анонс -->
             <div id="announceTab" class="tab-content" style="display:none;">
                 <div class="card p-6 bg-white/5 rounded-xl">
                     <h3 class="text-xl font-bold text-white mb-4">📢 Создать анонс ивента</h3>
-                    <p class="text-gray-400 text-sm mb-4">После анонса ивент появится во вкладке "Ивенты" со статусом "⏳ Ожидает проведения"</p>
+                    <p class="text-gray-400 text-sm mb-4">После анонса ивент появится в таблице и Google Sheets</p>
                     <form id="announceForm">
                         <input type="text" id="announceTitle" placeholder="📌 Название ивента" class="input-dark mb-3" required>
                         <textarea id="announceDescription" placeholder="📝 Описание ивента" rows="3" class="input-dark mb-3" required></textarea>
@@ -258,7 +255,6 @@
                 </div>
             </div>
 
-            <!-- Пользователи -->
             <div id="usersTab" class="tab-content" style="display:none;">
                 <h3 class="text-xl font-bold text-white mb-4">👥 Пользователи</h3>
                 <p class="text-gray-400 text-sm mb-4">Добавлять пользователей можно прямо в <a href="https://docs.google.com/spreadsheets/d/1ouZL26S8NhHkTROGHif776zzEqmI3cKA4TT3NE2ufi0/edit" target="_blank" class="text-red-400 hover:underline">Google Таблицу</a></p>
@@ -268,7 +264,7 @@
     </div>
 </div>
 
-<!-- МОДАЛЬНОЕ ОКНО БЫСТРОГО СОЗДАНИЯ ИВЕНТА (ПРОВЕДЁННЫЙ) -->
+<!-- МОДАЛЬНЫЕ ОКНА -->
 <div id="quickEventModal" class="modal fixed inset-0 flex items-center justify-center z-50" style="display:none;">
     <div class="modal-content p-6 w-full max-w-md m-4">
         <h3 class="text-xl font-bold text-white mb-4">📋 Быстрый ивент (уже проведён)</h3>
@@ -286,7 +282,6 @@
     </div>
 </div>
 
-<!-- МОДАЛЬНОЕ ОКНО ПРОВЕДЕНИЯ ИВЕНТА -->
 <div id="completeEventModal" class="modal fixed inset-0 flex items-center justify-center z-50" style="display:none;">
     <div class="modal-content p-6 w-full max-w-md m-4">
         <h3 class="text-xl font-bold text-white mb-4">✅ Провести ивент</h3>
@@ -308,16 +303,70 @@
 <script>
     // ============ ВАШИ URL ============
     const USERS_SHEET_API = 'https://script.google.com/macros/s/AKfycbxcpQ2oO5n9TJw6b04xJ7DrF8fgtT8EQ960FH0BqMfWzN4051BHkNOis3Uj0R3Tz9a5BA/exec';
+    const EVENTS_SHEET_API = 'https://script.google.com/macros/s/ТВОЙ_URL_ДЛЯ_ИВЕНТОВ/exec';  // ⚠️ ВСТАВЬ СЮДА URL!
     const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1507778037197050057/wnyKFFsvAOKtdPFghv8mj2asH_xQOoFXsHJyemo53cj6jxWYRJccAZmVQuTdoiqiXDCb';
     const ANNOUNCE_WEBHOOK_URL = 'https://discord.com/api/webhooks/1507826979544633424/LwuAJ79T2NZoGyV08n45xwOUWfHB4ObLLZ98hLM-N2TOEaINRJV2OCSaIciQLJo1LCD4';
-    const REPORT_WEBHOOK_URL = 'https://discord.com/api/webhooks/1507778037197050057/wnyKFFsvAOKtdPFghv8mj2asH_xQOoFXsHJyemo53cj6jxWYRJccAZmVQuTdoiqiXDCb';
     
     let currentUser = null;
     let events = [];
     let users = [];
     let monthlyChart = null;
     
-    // ============ ОТПРАВКА АНОНСА В DISCORD ============
+    // ============ СИНХРОНИЗАЦИЯ С GOOGLE SHEETS ============
+    async function syncEventsToCloud() {
+        if (!EVENTS_SHEET_API) return;
+        for (const event of events) {
+            try {
+                await fetch(EVENTS_SHEET_API, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(event)
+                });
+            } catch (error) { console.error('Sync error:', error); }
+        }
+    }
+    
+    async function loadEventsFromCloud() {
+        if (!EVENTS_SHEET_API) return;
+        try {
+            const response = await fetch(EVENTS_SHEET_API);
+            const cloudEvents = await response.json();
+            if (cloudEvents.length > 0) {
+                events = cloudEvents;
+                localStorage.setItem('events', JSON.stringify(events));
+                renderEvents();
+                renderStats();
+            }
+        } catch (error) {
+            console.error('Load events error:', error);
+            const saved = localStorage.getItem('events');
+            if (saved) events = JSON.parse(saved);
+            renderEvents();
+            renderStats();
+        }
+    }
+    
+    async function deleteEventFromCloud(eventId) {
+        if (!EVENTS_SHEET_API) return;
+        try {
+            await fetch(`${EVENTS_SHEET_API}?id=${eventId}`, { method: 'DELETE', mode: 'no-cors' });
+        } catch (error) { console.error('Delete error:', error); }
+    }
+    
+    async function updateEventInCloud(event) {
+        if (!EVENTS_SHEET_API) return;
+        try {
+            await fetch(EVENTS_SHEET_API, {
+                method: 'PUT',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(event)
+            });
+        } catch (error) { console.error('Update error:', error); }
+    }
+    
+    // ============ ОТПРАВКА В DISCORD ============
     async function sendAnnouncement(data) {
         const currentDate = new Date().toLocaleString('ru-RU');
         const embed = {
@@ -332,30 +381,18 @@
             footer: { text: `Gl1tch Events | ${currentDate}` },
             timestamp: new Date().toISOString()
         };
-        
-        if (data.extra) {
-            embed.fields.push({ name: '📝 ДОПОЛНИТЕЛЬНО', value: data.extra, inline: false });
-        }
+        if (data.extra) embed.fields.push({ name: '📝 ДОПОЛНИТЕЛЬНО', value: data.extra, inline: false });
         
         try {
             await fetch(ANNOUNCE_WEBHOOK_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    username: 'Gl1tch Events',
-                    avatar_url: 'https://cdn.discordapp.com/embed/avatars/1.png',
-                    embeds: [embed],
-                    content: '@everyone **НОВЫЙ АНОНС ИВЕНТА!**'
-                })
+                body: JSON.stringify({ username: 'Gl1tch Events', embeds: [embed], content: '@everyone **НОВЫЙ АНОНС ИВЕНТА!**' })
             });
             return true;
-        } catch (error) {
-            console.error('Ошибка отправки анонса:', error);
-            return false;
-        }
+        } catch (error) { return false; }
     }
     
-    // ============ ОТПРАВКА ОТЧЁТА В DISCORD ============
     async function sendReport(eventData, username) {
         const currentDate = new Date().toLocaleString('ru-RU');
         const embed = {
@@ -372,18 +409,14 @@
             footer: { text: 'Gl1tch Events' },
             timestamp: new Date().toISOString()
         };
-        
         try {
-            await fetch(REPORT_WEBHOOK_URL, {
+            await fetch(DISCORD_WEBHOOK_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username: 'Gl1tch Events', embeds: [embed], content: '📋 **НОВЫЙ ОТЧЁТ О ИВЕНТЕ!**' })
             });
             return true;
-        } catch (error) {
-            console.error('Ошибка отправки отчёта:', error);
-            return false;
-        }
+        } catch (error) { return false; }
     }
     
     // ============ ЗАГРУЗКА ПОЛЬЗОВАТЕЛЕЙ ============
@@ -392,34 +425,26 @@
             const response = await fetch(USERS_SHEET_API);
             users = await response.json();
             renderUsersList();
-        } catch (error) {
-            console.error('Ошибка загрузки пользователей:', error);
-        }
+        } catch (error) { console.error('Load users error:', error); }
     }
     
     function renderUsersList() {
         const container = document.getElementById('usersList');
         if (!container) return;
-        
         const roleLabels = {
             'admin': '<span class="text-red-400"><i class="fas fa-crown"></i> Администратор</span>',
             'manager': '<span class="text-yellow-400"><i class="fas fa-shield-alt"></i> Модератор</span>',
             'user': '<span class="text-blue-400"><i class="fas fa-user"></i> Пользователь</span>'
         };
-        
         if (!users || users.length === 0) {
             container.innerHTML = '<div class="text-center py-8 text-gray-400">Нет пользователей. Добавьте в Google Таблицу</div>';
             return;
         }
-        
         container.innerHTML = users.map(u => `
             <div class="user-card flex items-center justify-between p-3 bg-white/5 rounded-xl">
                 <div class="flex items-center space-x-3">
                     <img class="w-12 h-12 rounded-full object-cover border-2 border-red-500" src="${u.avatar || 'https://ui-avatars.com/api/?background=cc0000&color=fff&bold=true&size=40&name=' + (u.username || 'U').substring(0,2)}" alt="avatar">
-                    <div>
-                        <p class="text-white font-medium">${escapeHtml(u.username)}</p>
-                        <p class="text-xs">${roleLabels[u.role] || u.role}</p>
-                    </div>
+                    <div><p class="text-white font-medium">${escapeHtml(u.username)}</p><p class="text-xs">${roleLabels[u.role] || u.role}</p></div>
                 </div>
             </div>
         `).join('');
@@ -438,63 +463,44 @@
         return false;
     }
     
-    // ============ ИВЕНТЫ ============
-    function loadEvents() {
-        const saved = localStorage.getItem('events');
-        events = saved ? JSON.parse(saved) : [];
-        renderEvents();
-        renderStats();
-    }
-    
-    function saveEvents() {
+    // ============ УПРАВЛЕНИЕ ИВЕНТАМИ ============
+    async function saveEvents() {
         localStorage.setItem('events', JSON.stringify(events));
         renderEvents();
         renderStats();
+        await syncEventsToCloud();
     }
     
-    // Создание ивента из анонса (статус: pending)
-    function createPendingEvent(title, description) {
+    async function createPendingEvent(title, description) {
         const newEvent = {
             id: Date.now(),
-            title: title,
-            description: description,
-            assistants: '',
-            actors: '',
-            builders: '',
+            title, description,
+            assistants: '', actors: '', builders: '',
             created_at: new Date().toISOString(),
             created_by: currentUser.username,
-            status: 'pending',
-            announced: true
+            status: 'pending'
         };
         events.unshift(newEvent);
-        saveEvents();
+        await saveEvents();
         return newEvent;
     }
     
-    // Быстрое создание проведённого ивента
     async function createCompletedEvent(title, description, assistants, actors, builders) {
         const newEvent = {
             id: Date.now(),
-            title: title,
-            description: description,
-            assistants: assistants || '',
-            actors: actors || '',
-            builders: builders || '',
+            title, description,
+            assistants: assistants || '', actors: actors || '', builders: builders || '',
             created_at: new Date().toISOString(),
             created_by: currentUser.username,
             status: 'completed',
             completed_at: new Date().toISOString()
         };
         events.unshift(newEvent);
-        saveEvents();
-        
-        // Отправляем отчёт в Discord
+        await saveEvents();
         await sendReport(newEvent, currentUser.username);
-        
         return newEvent;
     }
     
-    // Завершение ивента (статус: completed)
     async function completeEvent(id, assistants, actors, builders) {
         const event = events.find(e => e.id == id);
         if (event) {
@@ -503,50 +509,42 @@
             event.actors = actors || '';
             event.builders = builders || '';
             event.completed_at = new Date().toISOString();
-            saveEvents();
-            
-            // Отправляем отчёт в Discord
+            await saveEvents();
+            await updateEventInCloud(event);
             await sendReport(event, currentUser.username);
             return event;
         }
         return null;
     }
     
-    // Удаление ивента
     async function deleteEvent(id) {
-        events = events.filter(e => e.id != id);
-        saveEvents();
-        showToast('🗑️ Ивент удалён');
+        const event = events.find(e => e.id == id);
+        if (event) {
+            events = events.filter(e => e.id != id);
+            await saveEvents();
+            await deleteEventFromCloud(id);
+            showToast('🗑️ Ивент удалён');
+        }
     }
     
     function renderEvents() {
         const container = document.getElementById('eventsList');
         if (!container) return;
-        
         if (events.length === 0) {
             container.innerHTML = '<div class="col-span-full text-center py-12 text-gray-400">Нет ивентов. Создайте первый!</div>';
             return;
         }
-        
         container.innerHTML = events.map(e => `
             <div class="card p-5 bg-white/5 rounded-xl animate-fadeInUp">
                 <div class="flex justify-between items-start mb-3">
                     <div class="flex-1">
                         <h3 class="text-xl font-bold text-white">${escapeHtml(e.title)}</h3>
-                        <div class="text-sm mt-1">
-                            ${e.status === 'pending' ? '<span class="status-pending"><i class="fas fa-clock"></i> ⏳ Ожидает проведения</span>' : '<span class="status-completed"><i class="fas fa-check-circle"></i> ✅ Проведён</span>'}
-                        </div>
+                        <div class="text-sm mt-1">${e.status === 'pending' ? '<span class="status-pending"><i class="fas fa-clock"></i> ⏳ Ожидает проведения</span>' : '<span class="status-completed"><i class="fas fa-check-circle"></i> ✅ Проведён</span>'}</div>
                     </div>
                     ${currentUser?.role === 'admin' ? `
                         <div class="flex gap-2">
-                            ${e.status === 'pending' ? `
-                                <button onclick="openCompleteModal(${e.id})" class="btn-yellow px-3 py-1 rounded-lg text-white text-sm">
-                                    <i class="fas fa-play"></i> Провести
-                                </button>
-                            ` : ''}
-                            <button onclick="deleteEventHandler(${e.id})" class="text-red-500 hover:text-red-400">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                            ${e.status === 'pending' ? `<button onclick="openCompleteModal(${e.id})" class="btn-yellow px-3 py-1 rounded-lg text-white text-sm"><i class="fas fa-play"></i> Провести</button>` : ''}
+                            <button onclick="deleteEventHandler(${e.id})" class="text-red-500 hover:text-red-400"><i class="fas fa-trash"></i></button>
                         </div>
                     ` : ''}
                 </div>
@@ -562,16 +560,10 @@
     function renderStats() {
         document.getElementById('statTotal').innerText = events.length;
         document.getElementById('statCompleted').innerText = events.filter(e => e.status === 'completed').length;
-        
         const months = {};
-        events.forEach(e => {
-            const month = new Date(e.created_at).toLocaleString('ru-RU', { year: 'numeric', month: 'long' });
-            months[month] = (months[month] || 0) + 1;
-        });
-        
+        events.forEach(e => { const month = new Date(e.created_at).toLocaleString('ru-RU', { year: 'numeric', month: 'long' }); months[month] = (months[month] || 0) + 1; });
         const labels = Object.keys(months).slice(0, 6);
         const data = labels.map(l => months[l]);
-        
         if (monthlyChart) monthlyChart.destroy();
         const ctx = document.getElementById('monthlyChart');
         if (ctx) {
@@ -584,9 +576,7 @@
     }
     
     function showToast(message) {
-        const toast = document.createElement('div');
-        toast.className = 'toast';
-        toast.textContent = message;
+        const toast = document.createElement('div'); toast.className = 'toast'; toast.textContent = message;
         document.body.appendChild(toast);
         setTimeout(() => toast.remove(), 3000);
     }
@@ -603,16 +593,10 @@
         document.getElementById('completeEventModal').style.display = 'flex';
     };
     
-    window.deleteEventHandler = async (id) => {
-        if (confirm('🗑️ Удалить ивент?')) {
-            await deleteEvent(id);
-        }
-    };
+    window.deleteEventHandler = async (id) => { if (confirm('🗑️ Удалить ивент?')) await deleteEvent(id); };
     
     window.showDetail = (id) => {
         const event = events.find(e => e.id == id);
-        if (!event) return;
-        
         const modal = document.createElement('div');
         modal.className = 'modal fixed inset-0 flex items-center justify-center z-50';
         modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
@@ -636,14 +620,8 @@
         document.body.appendChild(modal);
     };
     
-    function escapeHtml(text) {
-        if (!text) return '';
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
+    function escapeHtml(text) { if (!text) return ''; const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
     
-    // ============ НАВИГАЦИЯ ============
     document.querySelectorAll('.nav-item').forEach(item => {
         item.addEventListener('click', () => {
             const tab = item.dataset.tab;
@@ -654,70 +632,53 @@
         });
     });
     
-    // ============ ВХОД/ВЫХОД ============
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
-        
         await loadUsers();
-        
         if (login(username, password)) {
             document.getElementById('loginContainer').style.display = 'none';
             document.getElementById('appContainer').style.display = 'block';
-            loadEvents();
+            await loadEventsFromCloud();
             showToast(`Добро пожаловать, ${username}!`);
-            
-            setInterval(async () => {
-                await loadUsers();
-            }, 10000);
-        } else {
-            alert('Неверный логин или пароль');
-        }
+            setInterval(async () => { await loadUsers(); await loadEventsFromCloud(); }, 30000);
+        } else alert('Неверный логин или пароль');
     });
     
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-        currentUser = null;
-        localStorage.removeItem('currentUser');
-        location.reload();
-    });
+    document.getElementById('logoutBtn').addEventListener('click', () => { currentUser = null; localStorage.removeItem('currentUser'); location.reload(); });
     
-    // Быстрый ивент (уже проведён)
-    document.getElementById('newEventBtn').onclick = () => {
-        document.getElementById('quickEventModal').style.display = 'flex';
-    };
+    document.getElementById('newEventBtn').onclick = () => document.getElementById('quickEventModal').style.display = 'flex';
     document.getElementById('closeQuickModalBtn').onclick = () => document.getElementById('quickEventModal').style.display = 'none';
+    document.getElementById('closeCompleteModalBtn').onclick = () => document.getElementById('completeEventModal').style.display = 'none';
     
     document.getElementById('quickEventForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const title = document.getElementById('quickTitle').value;
-        const description = document.getElementById('quickDescription').value;
-        const assistants = document.getElementById('quickAssistants').value;
-        const actors = document.getElementById('quickActors').value;
-        const builders = document.getElementById('quickBuilders').value;
-        
-        await createCompletedEvent(title, description, assistants, actors, builders);
+        await createCompletedEvent(
+            document.getElementById('quickTitle').value,
+            document.getElementById('quickDescription').value,
+            document.getElementById('quickAssistants').value,
+            document.getElementById('quickActors').value,
+            document.getElementById('quickBuilders').value
+        );
         showToast('✅ Ивент создан и отчёт отправлен в Discord!');
         document.getElementById('quickEventModal').style.display = 'none';
         document.getElementById('quickEventForm').reset();
     });
     
-    // Завершение ивента
-    document.getElementById('closeCompleteModalBtn').onclick = () => document.getElementById('completeEventModal').style.display = 'none';
-    
     document.getElementById('completeEventForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const id = parseInt(document.getElementById('completeEventId').value);
-        const assistants = document.getElementById('completeAssistants').value;
-        const actors = document.getElementById('completeActors').value;
-        const builders = document.getElementById('completeBuilders').value;
-        
-        await completeEvent(id, assistants, actors, builders);
+        await completeEvent(
+            id,
+            document.getElementById('completeAssistants').value,
+            document.getElementById('completeActors').value,
+            document.getElementById('completeBuilders').value
+        );
         showToast('✅ Ивент проведён, отчёт отправлен в Discord!');
         document.getElementById('completeEventModal').style.display = 'none';
     });
     
-    // Анонс
     document.getElementById('announceForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const title = document.getElementById('announceTitle').value;
@@ -726,18 +687,13 @@
         const actors = document.getElementById('announceActors').value;
         const builders = document.getElementById('announceBuilders').value;
         const extra = document.getElementById('announceExtra').value;
-        
-        // Отправляем анонс в Discord
         await sendAnnouncement({ title, description, helpers, actors, builders, extra });
-        
-        // Создаём ивент в таблице со статусом "pending"
-        createPendingEvent(title, description);
-        
-        showToast('✅ Анонс опубликован и ивент добавлен в список!');
+        await createPendingEvent(title, description);
+        showToast('✅ Анонс опубликован и ивент добавлен в Google Sheets!');
         document.getElementById('announceForm').reset();
     });
     
-    // ============ АНИМАЦИЯ ТОЧЕК ============
+    // АНИМАЦИЯ ТОЧЕК
     const blobsContainer = document.getElementById('blobsContainer');
     for (let i = 0; i < 12; i++) {
         const blob = document.createElement('div');
@@ -783,10 +739,8 @@
             }
         }, 500);
     }
-    
     startDots();
     
-    // ============ ПРОВЕРКА СЕССИИ ============
     const savedUser = localStorage.getItem('currentUser');
     if (savedUser) {
         currentUser = JSON.parse(savedUser);
@@ -794,12 +748,9 @@
         document.getElementById('appContainer').style.display = 'block';
         document.getElementById('userName').innerHTML = currentUser.username;
         document.getElementById('userRole').innerHTML = currentUser.role === 'admin' ? '👑 Администратор' : '🛡️ Модератор';
-        loadEvents();
+        loadEventsFromCloud();
         loadUsers();
-        
-        setInterval(async () => {
-            await loadUsers();
-        }, 10000);
+        setInterval(async () => { await loadUsers(); await loadEventsFromCloud(); }, 30000);
     }
 </script>
 
