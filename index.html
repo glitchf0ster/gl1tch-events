@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ТаблицаИвентов | Учет ивентов</title>
+    <title>Gl1tch Events | Учет ивентов</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -59,11 +59,6 @@
             transition: all 0.3s ease;
         }
         .btn-green:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4); }
-        .btn-blue {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-            transition: all 0.3s ease;
-        }
-        .btn-blue:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4); }
         .tab-active {
             background: #cc0000;
             box-shadow: 0 2px 10px rgba(255, 0, 0, 0.3);
@@ -101,14 +96,36 @@
             to { opacity: 1; transform: translateY(0); }
         }
         .animate-fadeInUp { animation: fadeInUp 0.5s ease-out forwards; }
-        .loading {
+        .toast {
             position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            bottom: 20px;
+            right: 20px;
+            background: #10b981;
             color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
             z-index: 1000;
-            font-size: 1.2rem;
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .syncing {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #cc0000;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            z-index: 1000;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
     </style>
 </head>
@@ -116,6 +133,7 @@
 
 <div id="blobsContainer"></div>
 <div id="dotsContainer"></div>
+<div id="syncStatus" class="syncing" style="display:none;">🔄 Синхронизация...</div>
 
 <!-- ФОРМА ВХОДА -->
 <div id="loginContainer" class="min-h-screen flex items-center justify-center p-4 relative z-10">
@@ -124,8 +142,8 @@
             <div class="w-20 h-20 bg-gradient-to-br from-red-600 to-red-900 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <i class="fas fa-table-list text-4xl text-white"></i>
             </div>
-            <h1 class="text-3xl font-bold text-white mb-2">ТаблицаИвентов</h1>
-            <p class="text-gray-400">Система учета ивентов</p>
+            <h1 class="text-3xl font-bold text-white mb-2">Gl1tch Events</h1>
+            <p class="text-gray-400">Учет ивентов с автосинхронизацией</p>
         </div>
         <form id="loginForm">
             <input type="text" id="username" placeholder="Логин" class="input-dark mb-4" required>
@@ -135,7 +153,7 @@
             </button>
         </form>
         <div class="text-center text-gray-500 text-sm mt-4">
-            <i class="fas fa-info-circle"></i> Gl1tchFrost / kost@1975 | aferist / aferist
+            <i class="fas fa-info-circle"></i> Gl1tchFrost / kost@1975
         </div>
     </div>
 </div>
@@ -149,7 +167,7 @@
                     <div class="w-10 h-10 bg-gradient-to-br from-red-600 to-red-900 rounded-xl flex items-center justify-center">
                         <i class="fas fa-table-list text-white text-xl"></i>
                     </div>
-                    <h1 class="text-xl font-bold text-white">ТаблицаИвентов</h1>
+                    <h1 class="text-xl font-bold text-white">Gl1tch Events</h1>
                 </div>
                 <div class="flex items-center space-x-4">
                     <span id="userName" class="text-white"></span>
@@ -163,7 +181,6 @@
         <div class="flex space-x-2 bg-black/30 rounded-xl p-1 w-fit">
             <button id="tabEvents" class="tab-active px-6 py-2 rounded-lg text-white">📋 Ивенты</button>
             <button id="tabStats" class="tab-inactive px-6 py-2 rounded-lg text-white">📊 Статистика</button>
-            <button id="tabSync" class="tab-inactive px-6 py-2 rounded-lg text-white">🔄 Синхронизация</button>
         </div>
     </div>
 
@@ -175,25 +192,18 @@
 
         <div id="statsTab" style="display:none;">
             <div class="card p-6">
-                <h3 class="text-white font-semibold mb-4">📈 Всего ивентов: <span id="statTotal" class="text-red-400 text-2xl">0</span></h3>
+                <h3 class="text-white font-semibold mb-4">📈 Статистика</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="text-center">
+                        <p class="text-gray-400">Всего ивентов</p>
+                        <p class="text-4xl font-bold text-red-400" id="statTotal">0</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-gray-400">Последний ивент</p>
+                        <p class="text-lg text-white" id="statLastEvent">—</p>
+                    </div>
+                </div>
                 <canvas id="monthlyChart" height="200"></canvas>
-            </div>
-        </div>
-
-        <div id="syncTab" style="display:none;">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="card p-6">
-                    <h3 class="text-white font-semibold mb-4">📤 Экспорт</h3>
-                    <p class="text-gray-400 mb-4">Скопируйте этот код и отправьте на другое устройство</p>
-                    <textarea id="exportData" readonly class="input-dark" rows="6" style="font-family: monospace; font-size: 12px;"></textarea>
-                    <button id="copyBtn" class="btn-blue mt-4 px-4 py-2 rounded-xl text-white">📋 Копировать</button>
-                </div>
-                <div class="card p-6">
-                    <h3 class="text-white font-semibold mb-4">📥 Импорт</h3>
-                    <p class="text-gray-400 mb-4">Вставьте код с другого устройства и нажмите "Объединить"</p>
-                    <textarea id="importData" class="input-dark" rows="6" style="font-family: monospace; font-size: 12px;" placeholder='[{"title":"Тест","description":"Описание"...}]'></textarea>
-                    <button id="importBtn" class="btn-green mt-4 px-4 py-2 rounded-xl text-white">🔄 Объединить данные</button>
-                </div>
             </div>
         </div>
     </div>
@@ -219,72 +229,93 @@
 </div>
 
 <script>
+    // ============ НАСТРОЙКИ ============
+    const GOOGLE_SHEETS_API = 'https://script.google.com/macros/s/AKfycbzrXzQPckGPg0CxYUi8r4z7w2WgVq6CyZznhhkc73Q51KyxxulRGGHraDzsmmWkCcQS/exec';
     const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1507778037197050057/wnyKFFsvAOKtdPFghv8mj2asH_xQOoFXsHJyemo53cj6jxWYRJccAZmVQuTdoiqiXDCb';
     
     let currentUser = null;
     let events = [];
     let monthlyChart = null;
+    let autoSyncInterval = null;
     
+    // ФИКСИРОВАННЫЙ ПОЛЬЗОВАТЕЛЬ
     const users = [
-        { id: 1, username: 'Gl1tchFrost', password: 'kost@1975', role: 'admin' },
-        { id: 2, username: 'aferist', password: 'aferist', role: 'admin' }
+        { id: 1, username: 'Gl1tchFrost', password: 'kost@1975', role: 'admin' }
     ];
     
-    // ============ РАБОТА С LOCALSTORAGE ============
-    function loadEvents() {
-        const saved = localStorage.getItem('events');
-        if (saved) {
-            events = JSON.parse(saved);
-        } else {
-            events = [];
-        }
-        renderEvents();
-        renderStats();
-    }
-    
-    function saveEvents() {
-        localStorage.setItem('events', JSON.stringify(events));
-        renderEvents();
-        renderStats();
-        updateExportData();
-    }
-    
-    function updateExportData() {
-        const exportArea = document.getElementById('exportData');
-        if (exportArea) {
-            exportArea.value = JSON.stringify(events, null, 2);
-        }
-    }
-    
-    // ============ СИНХРОНИЗАЦИЯ ============
-    function exportEvents() {
-        return JSON.stringify(events, null, 2);
-    }
-    
-    function importEvents(importedData) {
+    // ============ GOOGLE SHEETS API ============
+    async function syncToCloud() {
+        if (!GOOGLE_SHEETS_API || events.length === 0) return;
+        showSyncStatus(true);
         try {
-            const newEvents = JSON.parse(importedData);
-            if (Array.isArray(newEvents)) {
-                // Объединяем, избегая дубликатов по id
-                const existingIds = new Set(events.map(e => e.id));
-                const uniqueNewEvents = newEvents.filter(e => !existingIds.has(e.id));
-                events = [...events, ...uniqueNewEvents];
-                events.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-                saveEvents();
-                alert(`✅ Импортировано ${uniqueNewEvents.length} новых ивентов`);
-                return true;
+            for (const event of events) {
+                if (!event.synced) {
+                    await fetch(GOOGLE_SHEETS_API, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(event)
+                    });
+                    event.synced = true;
+                }
             }
-        } catch (e) {
-            alert('❌ Ошибка: неверный формат данных');
-            return false;
-        }
+            localStorage.setItem('events', JSON.stringify(events));
+        } catch (error) { console.error('Sync error:', error); }
+        showSyncStatus(false);
     }
     
-    // ============ ОТПРАВКА В DISCORD ============
-    async function sendDiscordReport(eventData, username) {
+    async function deleteFromCloud(eventId) {
+        if (!GOOGLE_SHEETS_API) return;
+        try {
+            await fetch(`${GOOGLE_SHEETS_API}?id=${eventId}`, {
+                method: 'DELETE',
+                mode: 'no-cors'
+            });
+        } catch (error) { console.error('Delete error:', error); }
+    }
+    
+    async function loadFromCloud() {
+        if (!GOOGLE_SHEETS_API) return;
+        showSyncStatus(true);
+        try {
+            const response = await fetch(GOOGLE_SHEETS_API);
+            const cloudEvents = await response.json();
+            if (cloudEvents.length > events.length) {
+                events = cloudEvents;
+                localStorage.setItem('events', JSON.stringify(events));
+                renderEvents();
+                renderStats();
+            }
+        } catch (error) { console.error('Load error:', error); }
+        showSyncStatus(false);
+    }
+    
+    // ============ DISCORD УВЕДОМЛЕНИЯ ============
+    async function sendDiscordReport(eventData, username, isDelete = false) {
         const currentDate = new Date().toLocaleString('ru-RU');
+        
+        if (isDelete) {
+            const embed = {
+                title: '🗑️ ИВЕНТ УДАЛЕН - Gl1tch Events',
+                description: `**${eventData.title}** был удалён из системы`,
+                color: 0xff4444,
+                fields: [
+                    { name: '📝 УДАЛИЛ', value: username, inline: true },
+                    { name: '📅 ДАТА УДАЛЕНИЯ', value: currentDate, inline: true }
+                ],
+                footer: { text: 'Gl1tch Events - Система учета' },
+                timestamp: new Date().toISOString()
+            };
+            await fetch(DISCORD_WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: 'Gl1tch Events', embeds: [embed], content: '🗑️ **ИВЕНТ УДАЛЕН!**' })
+            });
+            return;
+        }
+        
         const embed = {
-            title: '📋 НОВЫЙ ОТЧЕТ - ТаблицаИвентов',
+            title: '📋 НОВЫЙ ОТЧЕТ - Gl1tch Events',
             description: `**${eventData.title}**\n\n${eventData.description}`,
             color: 0xcc0000,
             fields: [
@@ -294,27 +325,14 @@
                 { name: '📝 ОТЧЁТ ОТ', value: username, inline: true },
                 { name: '📅 ДАТА', value: currentDate, inline: true }
             ],
-            footer: { text: 'ТаблицаИвентов - Система учета' },
+            footer: { text: 'Gl1tch Events - Автосинхронизация' },
             timestamp: new Date().toISOString()
         };
-        
-        const payload = {
-            username: 'ТаблицаИвентов Бот',
-            embeds: [embed],
-            content: '📋 **НОВЫЙ ОТЧЕТ!**'
-        };
-        
-        try {
-            const response = await fetch(DISCORD_WEBHOOK_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            return response.ok;
-        } catch (error) {
-            console.error('Ошибка отправки:', error);
-            return false;
-        }
+        await fetch(DISCORD_WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: 'Gl1tch Events', embeds: [embed], content: '📋 **НОВЫЙ ОТЧЕТ!**' })
+        });
     }
     
     // ============ ФУНКЦИИ АВТОРИЗАЦИИ ============
@@ -331,6 +349,7 @@
     function logout() {
         currentUser = null;
         localStorage.removeItem('currentUser');
+        if (autoSyncInterval) clearInterval(autoSyncInterval);
     }
     
     function checkSession() {
@@ -343,16 +362,28 @@
     }
     
     // ============ УПРАВЛЕНИЕ ИВЕНТАМИ ============
+    function loadEvents() {
+        const saved = localStorage.getItem('events');
+        events = saved ? JSON.parse(saved) : [];
+        renderEvents();
+        renderStats();
+    }
+    
+    function saveEvents() {
+        localStorage.setItem('events', JSON.stringify(events));
+        renderEvents();
+        renderStats();
+        syncToCloud();
+    }
+    
     function createEvent(title, description, assistants, actors, builders) {
         const newEvent = {
             id: Date.now(),
-            title: title,
-            description: description,
-            assistants: assistants || '',
-            actors: actors || '',
-            builders: builders || '',
+            title, description,
+            assistants: assistants || '', actors: actors || '', builders: builders || '',
             created_at: new Date().toISOString(),
-            created_by: currentUser.username
+            created_by: currentUser.username,
+            synced: false
         };
         events.unshift(newEvent);
         saveEvents();
@@ -362,18 +393,22 @@
     function updateEvent(id, title, description, assistants, actors, builders) {
         const event = events.find(e => e.id == id);
         if (event) {
-            event.title = title;
-            event.description = description;
-            event.assistants = assistants || '';
-            event.actors = actors || '';
-            event.builders = builders || '';
+            event.title = title; event.description = description;
+            event.assistants = assistants || ''; event.actors = actors || ''; event.builders = builders || '';
+            event.synced = false;
             saveEvents();
         }
     }
     
-    function deleteEvent(id) {
+    async function deleteEvent(id) {
+        const event = events.find(e => e.id == id);
+        if (!event) return;
+        
         events = events.filter(e => e.id != id);
         saveEvents();
+        await deleteFromCloud(id);
+        await sendDiscordReport(event, currentUser.username, true);
+        showToast('🗑️ Ивент удалён');
     }
     
     // ============ ОТОБРАЖЕНИЕ ============
@@ -407,8 +442,9 @@
     }
     
     function renderStats() {
-        const statTotal = document.getElementById('statTotal');
-        if (statTotal) statTotal.innerText = events.length;
+        document.getElementById('statTotal').innerText = events.length;
+        const lastEvent = document.getElementById('statLastEvent');
+        if (lastEvent && events.length > 0) lastEvent.innerText = events[0].title;
         
         const months = {};
         events.forEach(e => {
@@ -424,20 +460,23 @@
         if (ctx) {
             monthlyChart = new Chart(ctx, {
                 type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Ивенты',
-                        data: data,
-                        borderColor: '#ff4444',
-                        backgroundColor: 'rgba(255, 68, 68, 0.1)',
-                        fill: true,
-                        tension: 0.3
-                    }]
-                },
+                data: { labels, datasets: [{ label: 'Ивенты', data, borderColor: '#ff4444', backgroundColor: 'rgba(255, 68, 68, 0.1)', fill: true, tension: 0.3 }] },
                 options: { responsive: true, maintainAspectRatio: true }
             });
         }
+    }
+    
+    function showToast(message) {
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+    
+    function showSyncStatus(show) {
+        const status = document.getElementById('syncStatus');
+        if (status) status.style.display = show ? 'block' : 'none';
     }
     
     // ============ ОБРАБОТЧИКИ ============
@@ -452,6 +491,9 @@
             document.getElementById('userName').innerHTML = currentUser.username;
             loadEvents();
             startDots();
+            loadFromCloud();
+            if (autoSyncInterval) clearInterval(autoSyncInterval);
+            autoSyncInterval = setInterval(() => loadFromCloud(), 30000);
         } else {
             alert('Неверный логин или пароль');
         }
@@ -482,65 +524,29 @@
         
         if (id) {
             updateEvent(id, title, description, assistants, actors, builders);
-            alert('✅ Ивент обновлен!');
+            showToast('✅ Ивент обновлен');
         } else {
             const newEvent = createEvent(title, description, assistants, actors, builders);
             await sendDiscordReport({ title, description, assistants, actors, builders }, currentUser.username);
-            alert('✅ Ивент создан и отчет отправлен в Discord!');
+            showToast('✅ Ивент создан и отчет отправлен в Discord!');
         }
-        
         document.getElementById('eventModal').style.display = 'none';
-        renderEvents();
-        renderStats();
-    });
-    
-    // Копирование
-    document.getElementById('copyBtn')?.addEventListener('click', () => {
-        const exportArea = document.getElementById('exportData');
-        exportArea.select();
-        document.execCommand('copy');
-        alert('✅ Данные скопированы!');
-    });
-    
-    // Импорт
-    document.getElementById('importBtn')?.addEventListener('click', () => {
-        const importData = document.getElementById('importData').value;
-        if (importData) {
-            importEvents(importData);
-            document.getElementById('importData').value = '';
-        } else {
-            alert('Вставьте данные для импорта');
-        }
     });
     
     // Вкладки
     document.getElementById('tabEvents').onclick = () => {
         document.getElementById('eventsTab').style.display = 'block';
         document.getElementById('statsTab').style.display = 'none';
-        document.getElementById('syncTab').style.display = 'none';
         document.getElementById('tabEvents').className = 'tab-active px-6 py-2 rounded-lg text-white';
         document.getElementById('tabStats').className = 'tab-inactive px-6 py-2 rounded-lg text-white';
-        document.getElementById('tabSync').className = 'tab-inactive px-6 py-2 rounded-lg text-white';
     };
     
     document.getElementById('tabStats').onclick = () => {
         document.getElementById('eventsTab').style.display = 'none';
         document.getElementById('statsTab').style.display = 'block';
-        document.getElementById('syncTab').style.display = 'none';
         document.getElementById('tabStats').className = 'tab-active px-6 py-2 rounded-lg text-white';
         document.getElementById('tabEvents').className = 'tab-inactive px-6 py-2 rounded-lg text-white';
-        document.getElementById('tabSync').className = 'tab-inactive px-6 py-2 rounded-lg text-white';
         renderStats();
-    };
-    
-    document.getElementById('tabSync').onclick = () => {
-        document.getElementById('eventsTab').style.display = 'none';
-        document.getElementById('statsTab').style.display = 'none';
-        document.getElementById('syncTab').style.display = 'block';
-        document.getElementById('tabSync').className = 'tab-active px-6 py-2 rounded-lg text-white';
-        document.getElementById('tabEvents').className = 'tab-inactive px-6 py-2 rounded-lg text-white';
-        document.getElementById('tabStats').className = 'tab-inactive px-6 py-2 rounded-lg text-white';
-        updateExportData();
     };
     
     // Глобальные функции
@@ -556,11 +562,9 @@
         document.getElementById('eventModal').style.display = 'flex';
     };
     
-    window.deleteEventHandler = (id) => {
-        if (confirm('Удалить ивент?')) {
-            deleteEvent(id);
-            renderEvents();
-            renderStats();
+    window.deleteEventHandler = async (id) => {
+        if (confirm('🗑️ Удалить ивент?')) {
+            await deleteEvent(id);
         }
     };
     
@@ -651,6 +655,8 @@
         document.getElementById('userName').innerHTML = currentUser.username;
         loadEvents();
         startDots();
+        loadFromCloud();
+        autoSyncInterval = setInterval(() => loadFromCloud(), 30000);
     }
 </script>
 
