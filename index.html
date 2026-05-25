@@ -171,7 +171,6 @@
     </div>
 </div>
 
-<!-- МОДАЛЬНОЕ ОКНО СОЗДАНИЯ ИВЕНТА -->
 <div id="eventModal" class="modal fixed inset-0 flex items-center justify-center z-50" style="display:none;">
     <div class="modal-content p-6 w-full max-w-md m-4">
         <h3 id="modalTitle" class="text-xl font-bold text-white mb-4">Новый ивент</h3>
@@ -204,8 +203,7 @@
 
 <script>
     // ============ ВАШИ URL ============
-    // ⚠️ ВСТАВЬТЕ СЮДА ВАШУ ССЫЛКУ ИЗ GOOGLE APPS SCRIPT
-    const USERS_SHEET_API = 'https://script.google.com/macros/s/AKfycbxfR3SZQ99YR0f9yh0yko80Bnce8RN5m6mKwB-5hovzBmgWLXsWzEz41PPLr4ikIBO8kQ/exec';
+    const USERS_SHEET_API = 'https://script.google.com/macros/s/ТВОЙ_URL_ИЗ_APPS_SCRIPT/exec';
     const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1507778037197050057/wnyKFFsvAOKtdPFghv8mj2asH_xQOoFXsHJyemo53cj6jxWYRJccAZmVQuTdoiqiXDCb';
     
     let currentUser = null;
@@ -213,7 +211,83 @@
     let users = [];
     let monthlyChart = null;
     
-    // ============ ЗАГРУЗКА ПОЛЬЗОВАТЕЛЕЙ ИЗ GOOGLE TABLES ============
+    // ============ ОТПРАВКА В DISCORD ============
+    async function sendDiscordReport(eventData, username) {
+        const currentDate = new Date().toLocaleString('ru-RU');
+        const embed = {
+            title: '📋 НОВЫЙ ИВЕНТ - Ожидает одобрения',
+            description: `**${eventData.title}**\n\n${eventData.description}`,
+            color: 0xeab308,
+            fields: [
+                { name: '👥 ПОМОЩНИКИ', value: eventData.assistants || 'Не указаны', inline: true },
+                { name: '🎭 АКТЁРЫ', value: eventData.actors || 'Не указаны', inline: true },
+                { name: '🏗️ СТРОИТЕЛИ', value: eventData.builders || 'Не указаны', inline: true },
+                { name: '📝 СОЗДАТЕЛЬ', value: username, inline: true },
+                { name: '📅 ДАТА', value: currentDate, inline: true }
+            ],
+            footer: { text: 'Gl1tch Events - Ожидает решения модератора' },
+            timestamp: new Date().toISOString()
+        };
+        
+        try {
+            await fetch(DISCORD_WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    username: 'Gl1tch Events', 
+                    embeds: [embed], 
+                    content: '⏳ **НОВЫЙ ИВЕНТ НА РАССМОТРЕНИИ!**' 
+                })
+            });
+            console.log('✅ Отправлено в Discord');
+        } catch (error) {
+            console.error('❌ Ошибка отправки в Discord:', error);
+        }
+    }
+    
+    async function sendApprovalReport(eventData, username) {
+        const embed = {
+            title: '✅ ИВЕНТ ОДОБРЕН',
+            description: `**${eventData.title}**\n\n${eventData.description}`,
+            color: 0x10b981,
+            fields: [
+                { name: '👥 ПОМОЩНИКИ', value: eventData.assistants || 'Не указаны', inline: true },
+                { name: '🎭 АКТЁРЫ', value: eventData.actors || 'Не указаны', inline: true },
+                { name: '🏗️ СТРОИТЕЛИ', value: eventData.builders || 'Не указаны', inline: true },
+                { name: '📝 ОДОБРИЛ', value: username, inline: true }
+            ],
+            footer: { text: 'Gl1tch Events' },
+            timestamp: new Date().toISOString()
+        };
+        await fetch(DISCORD_WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: 'Gl1tch Events', embeds: [embed], content: '✅ **ИВЕНТ ОДОБРЕН!**' })
+        });
+    }
+    
+    async function sendRejectionReport(eventData, username, reason) {
+        const embed = {
+            title: '❌ ИВЕНТ ОТКЛОНЕН',
+            description: `**${eventData.title}**\n\nПричина: ${reason}`,
+            color: 0xef4444,
+            fields: [
+                { name: '👥 ПОМОЩНИКИ', value: eventData.assistants || 'Не указаны', inline: true },
+                { name: '🎭 АКТЁРЫ', value: eventData.actors || 'Не указаны', inline: true },
+                { name: '🏗️ СТРОИТЕЛИ', value: eventData.builders || 'Не указаны', inline: true },
+                { name: '📝 ОТКЛОНИЛ', value: username, inline: true }
+            ],
+            footer: { text: 'Gl1tch Events' },
+            timestamp: new Date().toISOString()
+        };
+        await fetch(DISCORD_WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: 'Gl1tch Events', embeds: [embed], content: '❌ **ИВЕНТ ОТКЛОНЕН!**' })
+        });
+    }
+    
+    // ============ ЗАГРУЗКА ПОЛЬЗОВАТЕЛЕЙ ============
     async function loadUsers() {
         try {
             const response = await fetch(USERS_SHEET_API);
@@ -221,7 +295,6 @@
             localStorage.setItem('users', JSON.stringify(users));
             renderUsersList();
         } catch (error) {
-            console.error('Ошибка загрузки пользователей:', error);
             const saved = localStorage.getItem('users');
             if (saved) users = JSON.parse(saved);
             renderUsersList();
@@ -251,7 +324,6 @@
         `).join('');
     }
     
-    // ============ АВТОРИЗАЦИЯ ============
     function login(username, password) {
         const user = users.find(u => u.username === username && u.password === password);
         if (user) {
@@ -264,7 +336,6 @@
         return false;
     }
     
-    // ============ ИВЕНТЫ (ЛОКАЛЬНО) ============
     function loadEvents() {
         const saved = localStorage.getItem('events');
         events = saved ? JSON.parse(saved) : [];
@@ -280,7 +351,7 @@
         renderModeration();
     }
     
-    function createEvent(title, description, assistants, actors, builders) {
+    async function createEvent(title, description, assistants, actors, builders) {
         const newEvent = {
             id: Date.now(),
             title, description,
@@ -291,6 +362,10 @@
         };
         events.unshift(newEvent);
         saveEvents();
+        
+        // Отправка в Discord
+        await sendDiscordReport(newEvent, currentUser.username);
+        
         return newEvent;
     }
     
@@ -313,7 +388,6 @@
         showToast('🗑️ Ивент удалён');
     }
     
-    // ============ ОТОБРАЖЕНИЕ ============
     function renderEvents() {
         const container = document.getElementById('eventsList');
         if (!container) return;
@@ -413,10 +487,14 @@
         setTimeout(() => toast.remove(), 3000);
     }
     
-    // ============ ДЕЙСТВИЯ ============
-    window.approveEvent = (id) => {
-        updateEventStatus(id, 'approved');
-        showToast('✅ Ивент одобрен');
+    window.approveEvent = async (id) => {
+        const event = updateEventStatus(id, 'approved');
+        if (event) {
+            await sendApprovalReport(event, currentUser.username);
+            showToast('✅ Ивент одобрен');
+            renderModeration();
+            renderStats();
+        }
     };
     
     window.openRejectModal = (id) => {
@@ -425,12 +503,17 @@
         document.getElementById('rejectModal').style.display = 'flex';
     };
     
-    window.confirmReject = () => {
+    window.confirmReject = async () => {
         const id = parseInt(document.getElementById('rejectEventId').value);
         const reason = document.getElementById('rejectReason').value;
-        updateEventStatus(id, 'rejected', reason);
-        showToast('❌ Ивент отклонён');
-        document.getElementById('rejectModal').style.display = 'none';
+        const event = updateEventStatus(id, 'rejected', reason);
+        if (event) {
+            await sendRejectionReport(event, currentUser.username, reason);
+            showToast('❌ Ивент отклонён');
+            document.getElementById('rejectModal').style.display = 'none';
+            renderModeration();
+            renderStats();
+        }
     };
     
     window.deleteEventHandler = (id) => {
@@ -471,7 +554,6 @@
         return div.innerHTML;
     }
     
-    // ============ НАВИГАЦИЯ ============
     document.querySelectorAll('.nav-item').forEach(item => {
         item.addEventListener('click', () => {
             const tab = item.dataset.tab;
@@ -482,7 +564,6 @@
         });
     });
     
-    // ============ ОБРАБОТЧИКИ ============
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const username = document.getElementById('username').value;
@@ -516,7 +597,7 @@
     document.getElementById('closeModalBtn').onclick = () => document.getElementById('eventModal').style.display = 'none';
     document.getElementById('closeRejectModalBtn').onclick = () => document.getElementById('rejectModal').style.display = 'none';
     
-    document.getElementById('eventForm').addEventListener('submit', (e) => {
+    document.getElementById('eventForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const title = document.getElementById('eventTitle').value;
         const description = document.getElementById('eventDescription').value;
@@ -524,15 +605,14 @@
         const actors = document.getElementById('eventActors').value;
         const builders = document.getElementById('eventBuilders').value;
         
-        createEvent(title, description, assistants, actors, builders);
+        await createEvent(title, description, assistants, actors, builders);
         showToast('✅ Ивент создан и отправлен на рассмотрение!');
         document.getElementById('eventModal').style.display = 'none';
     });
     
-    // Ссылка на Google Таблицу (замените на вашу)
-    document.getElementById('sheetLink').href = 'https://script.google.com/macros/s/AKfycbxfR3SZQ99YR0f9yh0yko80Bnce8RN5m6mKwB-5hovzBmgWLXsWzEz41PPLr4ikIBO8kQ/exec';
+    document.getElementById('sheetLink').href = 'https://docs.google.com/spreadsheets/d/1ouZL26S8NhHkTROGHif776zzEqmI3cKA4TT3NE2ufi0/edit';
     
-    // ============ АНИМАЦИЯ ТОЧЕК ============
+    // АНИМАЦИЯ ТОЧЕК
     const blobsContainer = document.getElementById('blobsContainer');
     for (let i = 0; i < 12; i++) {
         const blob = document.createElement('div');
@@ -581,7 +661,6 @@
     
     startDots();
     
-    // Проверка сессии
     const savedUser = localStorage.getItem('currentUser');
     if (savedUser) {
         currentUser = JSON.parse(savedUser);
