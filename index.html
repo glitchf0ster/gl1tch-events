@@ -188,9 +188,6 @@
         { id: 4, username: 'Pashock', password: 'j28hf39', role: 'user', avatar: null }
     ];
     
-    // ============ GOOGLE SHEETS API ============
-    const GOOGLE_SHEETS_API = 'https://script.google.com/macros/s/AKfycbybP2YpSFVED9nho8oN2jHYWagaO0ytvnEBTMF0y37Vn7pqHqC1zNpXRbpw77nkxF4KzA/exec';
-    
     const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1507778037197050057/wnyKFFsvAOKtdPFghv8mj2asH_xQOoFXsHJyemo53cj6jxWYRJccAZmVQuTdoiqiXDCb';
     const ANNOUNCE_WEBHOOK_URL = 'https://discord.com/api/webhooks/1507826979544633424/LwuAJ79T2NZoGyV08n45xwOUWfHB4ObLLZ98hLM-N2TOEaINRJV2OCSaIciQLJo1LCD4';
     
@@ -199,25 +196,8 @@
     let pendingAnnounces = [];
     let pendingEvents = [];
     
-    async function loadAllData() {
-        try {
-            const response = await fetch(GOOGLE_SHEETS_API);
-            const data = await response.json();
-            events = data.filter(item => item.type === 'event' && item.status === 'completed') || [];
-            pendingAnnounces = data.filter(item => item.type === 'pending_announce') || [];
-            pendingEvents = data.filter(item => item.type === 'pending_event') || [];
-            events.sort((a, b) => new Date(b.completed_at) - new Date(a.completed_at));
-            pendingAnnounces.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-            pendingEvents.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-            renderEvents();
-            renderUsersList();
-            renderModeration();
-        } catch (error) {
-            loadLocalBackup();
-        }
-    }
-    
-    function loadLocalBackup() {
+    // ============ ЛОКАЛЬНОЕ ХРАНЕНИЕ (основное) ============
+    function loadLocalData() {
         const savedEvents = localStorage.getItem('events');
         const savedPendingAnnounces = localStorage.getItem('pendingAnnounces');
         const savedPendingEvents = localStorage.getItem('pendingEvents');
@@ -229,29 +209,13 @@
         renderModeration();
     }
     
-    async function saveToCloud(type, data) {
-        try {
-            await fetch(GOOGLE_SHEETS_API, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ type, ...data })
-            });
-        } catch (error) {}
+    function saveLocalData() {
         localStorage.setItem('events', JSON.stringify(events));
         localStorage.setItem('pendingAnnounces', JSON.stringify(pendingAnnounces));
         localStorage.setItem('pendingEvents', JSON.stringify(pendingEvents));
     }
     
-    async function deleteFromCloud(itemId, type) {
-        try {
-            await fetch(`${GOOGLE_SHEETS_API}?id=${itemId}&type=${type}`, {
-                method: 'DELETE',
-                mode: 'no-cors'
-            });
-        } catch (error) {}
-    }
-    
+    // ============ ОТПРАВКА В DISCORD ============
     async function sendApprovedAnnouncement(data) {
         const embed = {
             title: '📢 АНОНС ИВЕНТА',
@@ -300,27 +264,27 @@
         } catch (error) {}
     }
     
-    // ============ ОСНОВНЫЕ ФУНКЦИИ ============
-    async function createAnnounce(title, description, helpers, actors, builders, extra) {
+    // ============ УПРАВЛЕНИЕ ДАННЫМИ ============
+    function createAnnounce(title, description, helpers, actors, builders, extra) {
         const newAnnounce = {
             id: Date.now(),
             title, description, helpers, actors, builders, extra,
             created_at: new Date().toISOString(),
             created_by: currentUser.username,
-            status: 'pending',
-            type: 'pending_announce'
+            status: 'pending'
         };
         pendingAnnounces.unshift(newAnnounce);
-        await saveToCloud('pending_announce', newAnnounce);
-        renderModeration();  // ← Обновляем список анонсов
+        saveLocalData();
+        renderModeration();
+        showToast('✅ Анонс отправлен на одобрение!');
         return newAnnounce;
     }
     
-    async function cancelAnnounce(id) {
+    function cancelAnnounce(id) {
         const announce = pendingAnnounces.find(a => a.id == id);
         if (announce && announce.created_by === currentUser.username) {
             pendingAnnounces = pendingAnnounces.filter(a => a.id != id);
-            await deleteFromCloud(id, 'pending_announce');
+            saveLocalData();
             renderModeration();
             showToast('❌ Анонс отменён');
             return true;
@@ -328,11 +292,10 @@
         return false;
     }
     
-    async function approveAnnounce(id) {
+    function approveAnnounce(id) {
         const announce = pendingAnnounces.find(a => a.id == id);
         if (announce) {
             pendingAnnounces = pendingAnnounces.filter(a => a.id != id);
-            await deleteFromCloud(id, 'pending_announce');
             const newEvent = {
                 id: Date.now(),
                 title: announce.title,
@@ -343,12 +306,11 @@
                 created_at: announce.created_at,
                 created_by: announce.created_by,
                 approved_by: currentUser.username,
-                status: 'approved',
-                type: 'pending_event'
+                status: 'approved'
             };
             pendingEvents.unshift(newEvent);
-            await saveToCloud('pending_event', newEvent);
-            await sendApprovedAnnouncement({
+            saveLocalData();
+            sendApprovedAnnouncement({
                 title: announce.title,
                 description: announce.description,
                 helpers: announce.helpers,
@@ -363,11 +325,11 @@
         return false;
     }
     
-    async function rejectAnnounce(id, reason) {
+    function rejectAnnounce(id, reason) {
         const announce = pendingAnnounces.find(a => a.id == id);
         if (announce) {
             pendingAnnounces = pendingAnnounces.filter(a => a.id != id);
-            await deleteFromCloud(id, 'pending_announce');
+            saveLocalData();
             renderModeration();
             showToast('❌ Анонс отклонён');
             return true;
@@ -375,11 +337,10 @@
         return false;
     }
     
-    async function completeEvent(id, assistants, actors, builders) {
+    function completeEvent(id, assistants, actors, builders) {
         const event = pendingEvents.find(e => e.id == id);
         if (event) {
             pendingEvents = pendingEvents.filter(e => e.id != id);
-            await deleteFromCloud(id, 'pending_event');
             const completedEvent = {
                 ...event,
                 assistants: assistants || '',
@@ -387,12 +348,11 @@
                 builders: builders || '',
                 completed_at: new Date().toISOString(),
                 completed_by: currentUser.username,
-                status: 'completed',
-                type: 'event'
+                status: 'completed'
             };
             events.unshift(completedEvent);
-            await saveToCloud('event', completedEvent);
-            await sendReport(completedEvent, currentUser.username);
+            saveLocalData();
+            sendReport(completedEvent, currentUser.username);
             renderEvents();
             renderModeration();
             showToast('✅ Ивент проведён, отчёт отправлен в Discord!');
@@ -401,24 +361,25 @@
         return false;
     }
     
-    async function deleteEvent(id) {
+    function deleteEvent(id) {
         if (confirm('Удалить ивент?')) {
             events = events.filter(e => e.id != id);
-            await deleteFromCloud(id, 'event');
+            saveLocalData();
             renderEvents();
             showToast('🗑️ Ивент удалён');
         }
     }
     
-    async function deletePendingEvent(id) {
+    function deletePendingEvent(id) {
         if (confirm('Удалить ивент из списка на проведение?')) {
             pendingEvents = pendingEvents.filter(e => e.id != id);
-            await deleteFromCloud(id, 'pending_event');
+            saveLocalData();
             renderModeration();
             showToast('🗑️ Ивент удалён');
         }
     }
     
+    // ============ ОТОБРАЖЕНИЕ ============
     function renderEvents() {
         const container = document.getElementById('eventsList');
         if (!container) return;
@@ -456,6 +417,7 @@
     }
     
     function renderModeration() {
+        // Анонсы на одобрение
         const pendingContainer = document.getElementById('pendingAnnouncesList');
         if (pendingContainer) {
             const visibleAnnounces = (currentUser?.role === 'admin') ? pendingAnnounces : pendingAnnounces.filter(a => a.created_by === currentUser?.username);
@@ -490,6 +452,7 @@
             }
         }
         
+        // Ивенты на проведение
         const pendingEventsContainer = document.getElementById('pendingEventsList');
         if (pendingEventsContainer) {
             if (pendingEvents.length === 0) {
@@ -553,6 +516,7 @@
     
     function escapeHtml(text) { if (!text) return ''; const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
     
+    // ============ НАВИГАЦИЯ ============
     document.querySelectorAll('.nav-item').forEach(item => {
         item.addEventListener('click', () => {
             const tab = item.dataset.tab;
@@ -563,6 +527,7 @@
         });
     });
     
+    // ============ АВТОРИЗАЦИЯ ============
     function login(username, password) {
         const user = users.find(u => u.username === username && u.password === password);
         if (user) {
@@ -582,9 +547,8 @@
         if (login(username, password)) {
             document.getElementById('loginContainer').style.display = 'none';
             document.getElementById('appContainer').style.display = 'block';
-            await loadAllData();
+            loadLocalData();
             showToast(`Добро пожаловать, ${username}!`);
-            setInterval(async () => { await loadAllData(); }, 10000);
         } else {
             alert('Неверный логин или пароль');
         }
@@ -604,8 +568,7 @@
         const actors = document.getElementById('announceActors').value;
         const builders = document.getElementById('announceBuilders').value;
         const extra = document.getElementById('announceExtra').value;
-        await createAnnounce(title, description, helpers, actors, builders, extra);
-        showToast('✅ Анонс отправлен на одобрение!');
+        createAnnounce(title, description, helpers, actors, builders, extra);
         document.getElementById('announceForm').reset();
     });
     
@@ -615,14 +578,14 @@
         const assistants = document.getElementById('completeAssistants').value;
         const actors = document.getElementById('completeActors').value;
         const builders = document.getElementById('completeBuilders').value;
-        await completeEvent(id, assistants, actors, builders);
+        completeEvent(id, assistants, actors, builders);
         document.getElementById('completeEventModal').style.display = 'none';
     });
     
     document.getElementById('closeCompleteModalBtn').onclick = () => document.getElementById('completeEventModal').style.display = 'none';
     
-    window.cancelAnnounce = async (id) => { await cancelAnnounce(id); };
-    window.approve = async (id) => { await approveAnnounce(id); };
+    window.cancelAnnounce = (id) => { cancelAnnounce(id); };
+    window.approve = (id) => { approveAnnounce(id); };
     window.openRejectModal = (id, title) => { const reason = prompt('Укажите причину отклонения:', ''); if (reason) rejectAnnounce(id, reason); };
     window.openCompleteModal = (id) => {
         const event = pendingEvents.find(e => e.id == id);
@@ -638,6 +601,7 @@
     window.deletePendingEvent = deletePendingEvent;
     window.showDetail = showDetail;
     
+    // ============ АНИМАЦИЯ ТОЧЕК ============
     const blobsContainer = document.getElementById('blobsContainer');
     for (let i = 0; i < 12; i++) {
         const blob = document.createElement('div');
@@ -692,8 +656,7 @@
         document.getElementById('appContainer').style.display = 'block';
         document.getElementById('userName').innerHTML = currentUser.username;
         document.getElementById('userRole').innerHTML = currentUser.role === 'admin' ? '👑 Администратор' : '👤 Пользователь';
-        loadAllData();
-        setInterval(async () => { await loadAllData(); }, 10000);
+        loadLocalData();
     }
 </script>
 
