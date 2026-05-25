@@ -275,12 +275,12 @@
 </div>
 
 <script>
-    // ============ ПОЛЬЗОВАТЕЛИ (без модератора) ============
+    // ============ ПОЛЬЗОВАТЕЛИ ============
     const users = [
         { id: 1, username: 'Gl1tchFrost', password: 'kost@1975', role: 'admin', avatar: null },
         { id: 2, username: 'T1Ran', password: 'q4627hhn64', role: 'admin', avatar: null },
-        { id: 2, username: 'Nezny', password: '2fcn92145hg', role: 'user', avatar: null },
-        { id: 2, username: 'Pashock', password: 'j28hf39', role: 'user', avatar: null }
+        { id: 3, username: 'Nezny', password: '2fcn92145hg', role: 'user', avatar: null },
+        { id: 4, username: 'Pashock', password: 'j28hf39', role: 'user', avatar: null }
     ];
     
     const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1507778037197050057/wnyKFFsvAOKtdPFghv8mj2asH_xQOoFXsHJyemo53cj6jxWYRJccAZmVQuTdoiqiXDCb';
@@ -335,6 +335,7 @@
         `).join('');
     }
     
+    // Отправка уведомления ТОЛЬКО администратору (в канал "На одобрение")
     async function sendAnnouncementToAdmin(data, author) {
         const embed = {
             title: '📢 НОВЫЙ АНОНС НА ОДОБРЕНИЕ',
@@ -361,9 +362,10 @@
         } catch (error) { return false; }
     }
     
+    // Отправка в ОБЩИЙ АНОНС канал только после одобрения
     async function sendApprovedAnnouncement(data) {
         const embed = {
-            title: '📢 АНОНС ИВЕНТА (ОДОБРЕНО)',
+            title: '📢 АНОНС ИВЕНТА',
             description: `**${data.title}**\n\n${data.description}`,
             color: 0x10b981,
             fields: [
@@ -395,7 +397,7 @@
             timestamp: new Date().toISOString()
         };
         try {
-            await fetch(DISCORD_WEBHOOK_URL, {
+            await fetch(ANNOUNCE_WEBHOOK_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username: 'Gl1tch Events', embeds: [embed], content: '❌ **АНОНС ОТКЛОНЕН!**' })
@@ -440,6 +442,7 @@
         };
         pendingAnnounces.push(newAnnounce);
         saveAllData();
+        // Отправляем уведомление ТОЛЬКО администратору
         await sendAnnouncementToAdmin({ title, description, helpers, actors, builders, extra }, currentUser.username);
         return newAnnounce;
     }
@@ -464,6 +467,7 @@
             };
             pendingEvents.push(newEvent);
             saveAllData();
+            // Только после одобрения отправляем в общий АНОНС канал
             await sendApprovedAnnouncement({
                 title: announce.title,
                 description: announce.description,
