@@ -53,15 +53,12 @@
         .btn-red:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(255, 0, 0, 0.5); }
         .btn-green { background: linear-gradient(135deg, #10b981 0%, #059669 100%); transition: all 0.3s ease; }
         .btn-green:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4); }
-        .btn-blue { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); transition: all 0.3s ease; }
-        .btn-blue:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4); }
     </style>
 </head>
 <body>
 
 <div id="blobsContainer"></div>
 <div id="dotsContainer"></div>
-<div id="syncStatus" style="position: fixed; top: 10px; right: 10px; background: #cc0000; color: white; padding: 5px 10px; border-radius: 5px; font-size: 12px; z-index: 1000; display: none;">🔄 Синхронизация...</div>
 
 <!-- ФОРМА ВХОДА -->
 <div id="loginContainer" class="min-h-screen flex items-center justify-center p-4 relative z-10">
@@ -71,7 +68,7 @@
                 <i class="fas fa-table-list text-4xl text-white"></i>
             </div>
             <h1 class="text-3xl font-bold text-white mb-2">Gl1tch Events</h1>
-            <p class="text-gray-400">Учет ивентов с системой одобрения</p>
+            <p class="text-gray-400">Учет ивентов</p>
         </div>
         <form id="loginForm">
             <input type="text" id="username" placeholder="Логин" class="input-dark mb-4" required>
@@ -96,18 +93,12 @@
                 </div>
                 <div>
                     <h1 class="text-lg font-bold text-white">Gl1tch Events</h1>
-                    <p class="text-xs text-gray-500">Версия 2.0</p>
                 </div>
             </div>
             
             <div class="mb-6 p-3 bg-white/5 rounded-xl">
                 <div class="flex items-center space-x-3">
-                    <div class="relative">
-                        <img id="userAvatar" class="avatar" src="https://ui-avatars.com/api/?background=cc0000&color=fff&bold=true&size=40&name=GF" alt="Avatar">
-                        <button onclick="openAvatarModal()" class="absolute -bottom-1 -right-1 w-5 h-5 bg-gray-700 rounded-full flex items-center justify-center text-xs hover:bg-red-600 transition">
-                            <i class="fas fa-pen"></i>
-                        </button>
-                    </div>
+                    <img id="userAvatar" class="avatar" src="https://ui-avatars.com/api/?background=cc0000&color=fff&bold=true&size=40&name=GF" alt="Avatar">
                     <div class="flex-1">
                         <p id="userName" class="text-white font-medium text-sm">Gl1tchFrost</p>
                         <p id="userRole" class="text-xs text-gray-400">Администратор</p>
@@ -144,24 +135,18 @@
     
     <div class="main-content">
         <div class="container mx-auto px-6 py-8">
-            <!-- Ивенты -->
             <div id="eventsTab" class="tab-content">
                 <button id="newEventBtn" class="btn-green px-6 py-3 rounded-xl font-semibold text-white mb-6">+ Новый ивент</button>
                 <div id="eventsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
             </div>
 
-            <!-- Статистика -->
             <div id="statsTab" class="tab-content" style="display:none;">
                 <div class="card p-6 bg-white/5 rounded-xl">
                     <h3 class="text-white font-semibold mb-4 text-xl">📈 Статистика</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div class="text-center p-4 bg-white/5 rounded-xl">
                             <p class="text-gray-400">Всего ивентов</p>
                             <p class="text-4xl font-bold text-white" id="statTotal">0</p>
-                        </div>
-                        <div class="text-center p-4 bg-white/5 rounded-xl">
-                            <p class="text-gray-400">Одобрено</p>
-                            <p class="text-4xl font-bold text-green-400" id="statApproved">0</p>
                         </div>
                         <div class="text-center p-4 bg-white/5 rounded-xl">
                             <p class="text-gray-400">На рассмотрении</p>
@@ -172,27 +157,21 @@
                 </div>
             </div>
 
-            <!-- Модерация -->
             <div id="moderationTab" class="tab-content" style="display:none;">
                 <h3 class="text-xl font-bold text-white mb-4">🛡️ Ивенты на рассмотрении</h3>
                 <div id="pendingEventsList" class="space-y-4"></div>
             </div>
 
-            <!-- Пользователи -->
             <div id="usersTab" class="tab-content" style="display:none;">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-xl font-bold text-white">👥 Список пользователей</h3>
-                    <button id="newUserBtn" class="btn-green px-4 py-2 rounded-lg text-white text-sm">
-                        <i class="fas fa-user-plus mr-2"></i> Добавить
-                    </button>
-                </div>
+                <h3 class="text-xl font-bold text-white mb-4">👥 Пользователи (из Google Sheets)</h3>
+                <p class="text-gray-400 text-sm mb-4">Добавлять пользователей можно прямо в <a href="#" id="sheetLink" class="text-red-400 hover:underline">Google Таблицу</a></p>
                 <div id="usersList" class="space-y-3"></div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- МОДАЛЬНЫЕ ОКНА -->
+<!-- МОДАЛЬНОЕ ОКНО СОЗДАНИЯ ИВЕНТА -->
 <div id="eventModal" class="modal fixed inset-0 flex items-center justify-center z-50" style="display:none;">
     <div class="modal-content p-6 w-full max-w-md m-4">
         <h3 id="modalTitle" class="text-xl font-bold text-white mb-4">Новый ивент</h3>
@@ -223,71 +202,26 @@
     </div>
 </div>
 
-<div id="userModal" class="modal fixed inset-0 flex items-center justify-center z-50" style="display:none;">
-    <div class="modal-content p-6 w-full max-w-md m-4">
-        <h3 class="text-xl font-bold text-white mb-4">Добавить пользователя</h3>
-        <form id="userForm">
-            <input type="text" id="newUsername" placeholder="Логин" class="input-dark mb-3" required>
-            <input type="password" id="newPassword" placeholder="Пароль" class="input-dark mb-3" required>
-            <select id="newUserRole" class="input-dark mb-4">
-                <option value="user">👤 Пользователь</option>
-                <option value="manager">🛡️ Модератор</option>
-                <option value="admin">👑 Администратор</option>
-            </select>
-            <input type="url" id="newUserAvatar" placeholder="URL аватарки (опционально)" class="input-dark mb-4">
-            <div class="flex justify-end gap-3">
-                <button type="button" id="closeUserModalBtn" class="px-4 py-2 bg-gray-600 rounded-xl text-white">Отмена</button>
-                <button type="submit" class="btn-green px-4 py-2 rounded-xl text-white">Создать</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<div id="avatarModal" class="modal fixed inset-0 flex items-center justify-center z-50" style="display:none;">
-    <div class="modal-content p-6 w-full max-w-md m-4">
-        <h3 class="text-xl font-bold text-white mb-4">Сменить аватар</h3>
-        <p class="text-gray-400 text-sm mb-4">Введите URL изображения (png, jpg, gif)</p>
-        <input type="url" id="avatarUrl" placeholder="https://example.com/avatar.png" class="input-dark mb-4">
-        <div class="flex justify-end gap-3">
-            <button type="button" id="closeAvatarModalBtn" class="px-4 py-2 bg-gray-600 rounded-xl text-white">Отмена</button>
-            <button type="button" id="saveAvatarBtn" class="btn-blue px-4 py-2 rounded-xl text-white">Сохранить</button>
-        </div>
-    </div>
-</div>
-
 <script>
-    // ============ ВАШИ URL ИЗ GOOGLE SHEETS ============
-    const EVENTS_SHEET_API = 'https://script.google.com/macros/s/AKfycby6BIruAoV24hS5nJwYHunXTwyev9cyWNg9xxgX-MTQYcuq3UVQiHPTu0iiDGk2t-9r/exec';
-    const USERS_SHEET_API = 'https://script.google.com/macros/s/AKfycbyW58V1mBlIlpw2AVFZblpsy8JXsSMspjmzk2STNBs70epZtzuxfMhRq6r8pmRA9mwBzA/exec';
+    // ============ ВАШИ URL ============
+    // ⚠️ ВСТАВЬТЕ СЮДА ВАШУ ССЫЛКУ ИЗ GOOGLE APPS SCRIPT
+    const USERS_SHEET_API = 'https://script.google.com/macros/s/AKfycbxfR3SZQ99YR0f9yh0yko80Bnce8RN5m6mKwB-5hovzBmgWLXsWzEz41PPLr4ikIBO8kQ/exec';
     const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1507778037197050057/wnyKFFsvAOKtdPFghv8mj2asH_xQOoFXsHJyemo53cj6jxWYRJccAZmVQuTdoiqiXDCb';
     
     let currentUser = null;
     let events = [];
     let users = [];
     let monthlyChart = null;
-    let autoSyncInterval = null;
     
-    function showToast(message) {
-        const toast = document.createElement('div');
-        toast.className = 'toast';
-        toast.textContent = message;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
-    }
-    
-    // ============ ЗАГРУЗКА ПОЛЬЗОВАТЕЛЕЙ ============
+    // ============ ЗАГРУЗКА ПОЛЬЗОВАТЕЛЕЙ ИЗ GOOGLE TABLES ============
     async function loadUsers() {
         try {
             const response = await fetch(USERS_SHEET_API);
-            const cloudUsers = await response.json();
-            if (cloudUsers.length > 0) {
-                users = cloudUsers;
-            } else {
-                users = [{ id: 1, username: 'Gl1tchFrost', password: 'kost@1975', role: 'admin', avatar: null }];
-            }
+            users = await response.json();
             localStorage.setItem('users', JSON.stringify(users));
             renderUsersList();
         } catch (error) {
+            console.error('Ошибка загрузки пользователей:', error);
             const saved = localStorage.getItem('users');
             if (saved) users = JSON.parse(saved);
             renderUsersList();
@@ -307,22 +241,12 @@
         container.innerHTML = users.map(u => `
             <div class="user-card flex items-center justify-between p-3 bg-white/5 rounded-xl">
                 <div class="flex items-center space-x-3">
-                    <img class="w-12 h-12 rounded-full object-cover border-2 border-red-500" src="${u.avatar || 'https://ui-avatars.com/api/?background=cc0000&color=fff&bold=true&size=40&name=' + u.username.substring(0,2)}" alt="avatar">
+                    <img class="w-12 h-12 rounded-full object-cover border-2 border-red-500" src="${u.avatar || 'https://ui-avatars.com/api/?background=cc0000&color=fff&bold=true&size=40&name=' + (u.username || 'U').substring(0,2)}" alt="avatar">
                     <div>
                         <p class="text-white font-medium">${escapeHtml(u.username)}</p>
                         <p class="text-xs">${roleLabels[u.role] || u.role}</p>
                     </div>
                 </div>
-                ${currentUser?.role === 'admin' && u.id !== currentUser.id ? `
-                    <div class="flex gap-2">
-                        <select onchange="changeUserRole(${u.id}, this.value)" class="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-sm">
-                            <option value="user" ${u.role === 'user' ? 'selected' : ''}>Пользователь</option>
-                            <option value="manager" ${u.role === 'manager' ? 'selected' : ''}>Модератор</option>
-                            <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Администратор</option>
-                        </select>
-                        <button onclick="deleteUser(${u.id})" class="text-red-500 hover:text-red-400"><i class="fas fa-trash"></i></button>
-                    </div>
-                ` : ''}
             </div>
         `).join('');
     }
@@ -335,12 +259,230 @@
             localStorage.setItem('currentUser', JSON.stringify(currentUser));
             document.getElementById('userName').innerHTML = currentUser.username;
             document.getElementById('userRole').innerHTML = currentUser.role === 'admin' ? '👑 Администратор' : '🛡️ Модератор';
-            if (currentUser.avatar) document.getElementById('userAvatar').src = currentUser.avatar;
             return true;
         }
         return false;
     }
     
+    // ============ ИВЕНТЫ (ЛОКАЛЬНО) ============
+    function loadEvents() {
+        const saved = localStorage.getItem('events');
+        events = saved ? JSON.parse(saved) : [];
+        renderEvents();
+        renderStats();
+        renderModeration();
+    }
+    
+    function saveEvents() {
+        localStorage.setItem('events', JSON.stringify(events));
+        renderEvents();
+        renderStats();
+        renderModeration();
+    }
+    
+    function createEvent(title, description, assistants, actors, builders) {
+        const newEvent = {
+            id: Date.now(),
+            title, description,
+            assistants: assistants || '', actors: actors || '', builders: builders || '',
+            created_at: new Date().toISOString(),
+            created_by: currentUser.username,
+            status: 'pending'
+        };
+        events.unshift(newEvent);
+        saveEvents();
+        return newEvent;
+    }
+    
+    function updateEventStatus(eventId, status, reason = '') {
+        const event = events.find(e => e.id == eventId);
+        if (event) {
+            event.status = status;
+            event.reviewed_by = currentUser.username;
+            event.reviewed_at = new Date().toISOString();
+            if (reason) event.reject_reason = reason;
+            saveEvents();
+            return event;
+        }
+        return null;
+    }
+    
+    function deleteEvent(id) {
+        events = events.filter(e => e.id != id);
+        saveEvents();
+        showToast('🗑️ Ивент удалён');
+    }
+    
+    // ============ ОТОБРАЖЕНИЕ ============
+    function renderEvents() {
+        const container = document.getElementById('eventsList');
+        if (!container) return;
+        
+        const visibleEvents = events.filter(e => e.status === 'approved' || e.created_by === currentUser?.username);
+        
+        if (visibleEvents.length === 0) {
+            container.innerHTML = '<div class="col-span-full text-center py-12 text-gray-400">Нет ивентов. Создайте первый!</div>';
+            return;
+        }
+        
+        container.innerHTML = visibleEvents.map(e => `
+            <div class="card p-5 bg-white/5 rounded-xl animate-fadeInUp">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold text-white">${escapeHtml(e.title)}</h3>
+                        <div class="text-sm mt-1">${getStatusBadge(e.status)}</div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="deleteEventHandler(${e.id})" class="text-red-500 hover:text-red-400"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+                <p class="text-gray-300 mb-3">${escapeHtml((e.description || '').substring(0, 100))}${(e.description || '').length > 100 ? '...' : ''}</p>
+                <div class="flex justify-between items-center text-sm text-gray-500">
+                    <span><i class="far fa-calendar-alt mr-1"></i>${new Date(e.created_at).toLocaleDateString()}</span>
+                    <button onclick="showDetail(${e.id})" class="text-red-400 hover:underline">Подробнее →</button>
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    function renderModeration() {
+        const container = document.getElementById('pendingEventsList');
+        if (!container) return;
+        
+        const pendingEvents = events.filter(e => e.status === 'pending');
+        
+        if (pendingEvents.length === 0) {
+            container.innerHTML = '<div class="text-center py-12 text-gray-400">Нет ивентов на рассмотрении</div>';
+            return;
+        }
+        
+        container.innerHTML = pendingEvents.map(e => `
+            <div class="card p-4 bg-white/5 rounded-xl">
+                <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold text-white">${escapeHtml(e.title)}</h3>
+                        <p class="text-gray-400 text-sm mt-1">Создал: ${escapeHtml(e.created_by)} | ${new Date(e.created_at).toLocaleString()}</p>
+                        <p class="text-gray-300 mt-2">${escapeHtml((e.description || '').substring(0, 150))}${(e.description || '').length > 150 ? '...' : ''}</p>
+                    </div>
+                    <div class="flex gap-2 ml-4">
+                        <button onclick="approveEvent(${e.id})" class="btn-green px-4 py-2 rounded-lg text-white text-sm"><i class="fas fa-check"></i> Одобрить</button>
+                        <button onclick="openRejectModal(${e.id})" class="btn-red px-4 py-2 rounded-lg text-white text-sm"><i class="fas fa-times"></i> Отклонить</button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    function renderStats() {
+        document.getElementById('statTotal').innerText = events.length;
+        document.getElementById('statPending').innerText = events.filter(e => e.status === 'pending').length;
+        
+        const months = {};
+        events.forEach(e => {
+            const month = new Date(e.created_at).toLocaleString('ru-RU', { year: 'numeric', month: 'long' });
+            months[month] = (months[month] || 0) + 1;
+        });
+        
+        const labels = Object.keys(months).slice(0, 6);
+        const data = labels.map(l => months[l]);
+        
+        if (monthlyChart) monthlyChart.destroy();
+        const ctx = document.getElementById('monthlyChart');
+        if (ctx) {
+            monthlyChart = new Chart(ctx, {
+                type: 'line',
+                data: { labels, datasets: [{ label: 'Ивенты', data, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.3 }] },
+                options: { responsive: true, maintainAspectRatio: true }
+            });
+        }
+    }
+    
+    function getStatusBadge(status) {
+        switch(status) {
+            case 'approved': return '<span class="status-approved"><i class="fas fa-check-circle"></i> Одобрен</span>';
+            case 'rejected': return '<span class="status-rejected"><i class="fas fa-times-circle"></i> Отклонён</span>';
+            default: return '<span class="status-pending"><i class="fas fa-clock"></i> На рассмотрении</span>';
+        }
+    }
+    
+    function showToast(message) {
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+    
+    // ============ ДЕЙСТВИЯ ============
+    window.approveEvent = (id) => {
+        updateEventStatus(id, 'approved');
+        showToast('✅ Ивент одобрен');
+    };
+    
+    window.openRejectModal = (id) => {
+        document.getElementById('rejectEventId').value = id;
+        document.getElementById('rejectReason').value = '';
+        document.getElementById('rejectModal').style.display = 'flex';
+    };
+    
+    window.confirmReject = () => {
+        const id = parseInt(document.getElementById('rejectEventId').value);
+        const reason = document.getElementById('rejectReason').value;
+        updateEventStatus(id, 'rejected', reason);
+        showToast('❌ Ивент отклонён');
+        document.getElementById('rejectModal').style.display = 'none';
+    };
+    
+    window.deleteEventHandler = (id) => {
+        if (confirm('🗑️ Удалить ивент?')) deleteEvent(id);
+    };
+    
+    window.showDetail = (id) => {
+        const event = events.find(e => e.id == id);
+        if (!event) return;
+        
+        const modal = document.createElement('div');
+        modal.className = 'modal fixed inset-0 flex items-center justify-center z-50';
+        modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+        modal.innerHTML = `
+            <div class="modal-content p-6 w-full max-w-2xl m-4">
+                <div class="flex justify-between items-start mb-4">
+                    <h3 class="text-2xl font-bold text-white">${escapeHtml(event.title)}</h3>
+                    <button onclick="this.closest('.modal').remove()" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+                </div>
+                <div class="mb-4">${getStatusBadge(event.status)}</div>
+                <p class="text-gray-300 mb-6">${escapeHtml(event.description)}</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-red-900/30 p-4 rounded-xl"><b class="text-red-400">Помощники:</b><br>${escapeHtml(event.assistants) || 'Не указаны'}</div>
+                    <div class="bg-red-900/30 p-4 rounded-xl"><b class="text-red-400">Актёры:</b><br>${escapeHtml(event.actors) || 'Не указаны'}</div>
+                    <div class="bg-red-900/30 p-4 rounded-xl"><b class="text-red-400">Строители:</b><br>${escapeHtml(event.builders) || 'Не указаны'}</div>
+                </div>
+                <div class="mt-4 text-sm text-gray-500">Создан: ${new Date(event.created_at).toLocaleString()} | Автор: ${escapeHtml(event.created_by)}</div>
+                ${event.status === 'rejected' && event.reject_reason ? `<div class="mt-2 text-sm text-red-400">Причина отклонения: ${escapeHtml(event.reject_reason)}</div>` : ''}
+            </div>
+        `;
+        document.body.appendChild(modal);
+    };
+    
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    // ============ НАВИГАЦИЯ ============
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const tab = item.dataset.tab;
+            document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+            document.getElementById(tab + 'Tab').style.display = 'block';
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('nav-active'));
+            item.classList.add('nav-active');
+        });
+    });
+    
+    // ============ ОБРАБОТЧИКИ ============
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const username = document.getElementById('username').value;
@@ -351,7 +493,8 @@
         if (login(username, password)) {
             document.getElementById('loginContainer').style.display = 'none';
             document.getElementById('appContainer').style.display = 'block';
-            showToast('Добро пожаловать, ' + username);
+            loadEvents();
+            showToast(`Добро пожаловать, ${username}!`);
         } else {
             alert('Неверный логин или пароль');
         }
@@ -363,45 +506,33 @@
         location.reload();
     });
     
-    function escapeHtml(text) {
-        if (!text) return '';
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-    
-    // Заглушки для остальных функций (чтобы не было ошибок)
-    window.openAvatarModal = () => { document.getElementById('avatarModal').style.display = 'flex'; };
-    document.getElementById('closeAvatarModalBtn').onclick = () => document.getElementById('avatarModal').style.display = 'none';
-    document.getElementById('saveAvatarBtn').onclick = () => {
-        const url = document.getElementById('avatarUrl').value;
-        if (url && currentUser) {
-            currentUser.avatar = url;
-            document.getElementById('userAvatar').src = url;
-            showToast('Аватар обновлён');
-        }
-        document.getElementById('avatarModal').style.display = 'none';
+    document.getElementById('newEventBtn').onclick = () => {
+        document.getElementById('eventId').value = '';
+        document.getElementById('eventForm').reset();
+        document.getElementById('modalTitle').innerText = 'Новый ивент';
+        document.getElementById('eventModal').style.display = 'flex';
     };
     
-    document.getElementById('newUserBtn').onclick = () => document.getElementById('userModal').style.display = 'flex';
-    document.getElementById('closeUserModalBtn').onclick = () => document.getElementById('userModal').style.display = 'none';
-    
-    document.getElementById('newEventBtn').onclick = () => document.getElementById('eventModal').style.display = 'flex';
     document.getElementById('closeModalBtn').onclick = () => document.getElementById('eventModal').style.display = 'none';
     document.getElementById('closeRejectModalBtn').onclick = () => document.getElementById('rejectModal').style.display = 'none';
     
-    // Навигация по вкладкам
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.addEventListener('click', () => {
-            const tab = item.dataset.tab;
-            document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
-            document.getElementById(tab + 'Tab').style.display = 'block';
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('nav-active'));
-            item.classList.add('nav-active');
-        });
+    document.getElementById('eventForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const title = document.getElementById('eventTitle').value;
+        const description = document.getElementById('eventDescription').value;
+        const assistants = document.getElementById('eventAssistants').value;
+        const actors = document.getElementById('eventActors').value;
+        const builders = document.getElementById('eventBuilders').value;
+        
+        createEvent(title, description, assistants, actors, builders);
+        showToast('✅ Ивент создан и отправлен на рассмотрение!');
+        document.getElementById('eventModal').style.display = 'none';
     });
     
-    // Запуск анимации точек
+    // Ссылка на Google Таблицу (замените на вашу)
+    document.getElementById('sheetLink').href = 'https://script.google.com/macros/s/AKfycbxfR3SZQ99YR0f9yh0yko80Bnce8RN5m6mKwB-5hovzBmgWLXsWzEz41PPLr4ikIBO8kQ/exec';
+    
+    // ============ АНИМАЦИЯ ТОЧЕК ============
     const blobsContainer = document.getElementById('blobsContainer');
     for (let i = 0; i < 12; i++) {
         const blob = document.createElement('div');
@@ -458,7 +589,7 @@
         document.getElementById('appContainer').style.display = 'block';
         document.getElementById('userName').innerHTML = currentUser.username;
         document.getElementById('userRole').innerHTML = currentUser.role === 'admin' ? '👑 Администратор' : '🛡️ Модератор';
-        if (currentUser.avatar) document.getElementById('userAvatar').src = currentUser.avatar;
+        loadEvents();
         loadUsers();
     }
 </script>
