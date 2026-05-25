@@ -59,6 +59,11 @@
             transition: all 0.3s ease;
         }
         .btn-green:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4); }
+        .btn-yellow {
+            background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+            transition: all 0.3s ease;
+        }
+        .btn-yellow:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(234, 179, 8, 0.4); }
         .tab-active {
             background: #cc0000;
             box-shadow: 0 2px 10px rgba(255, 0, 0, 0.3);
@@ -127,6 +132,9 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
+        .status-pending { color: #eab308; }
+        .status-approved { color: #10b981; }
+        .status-rejected { color: #ef4444; }
     </style>
 </head>
 <body>
@@ -143,7 +151,7 @@
                 <i class="fas fa-table-list text-4xl text-white"></i>
             </div>
             <h1 class="text-3xl font-bold text-white mb-2">Gl1tch Events</h1>
-            <p class="text-gray-400">Учет ивентов с автосинхронизацией</p>
+            <p class="text-gray-400">Учет ивентов с системой одобрения</p>
         </div>
         <form id="loginForm">
             <input type="text" id="username" placeholder="Логин" class="input-dark mb-4" required>
@@ -153,7 +161,7 @@
             </button>
         </form>
         <div class="text-center text-gray-500 text-sm mt-4">
-            <i class="fas fa-info-circle"></i> Gl1tchFrost / kost@1975
+            <i class="fas fa-info-circle"></i> Логины: Gl1tchFrost (admin) / kost@1975
         </div>
     </div>
 </div>
@@ -171,6 +179,7 @@
                 </div>
                 <div class="flex items-center space-x-4">
                     <span id="userName" class="text-white"></span>
+                    <span id="userRole" class="text-xs px-2 py-1 rounded"></span>
                     <button id="logoutBtn" class="bg-red-600 px-4 py-2 rounded-xl text-sm text-white hover:bg-red-700">Выйти</button>
                 </div>
             </div>
@@ -181,30 +190,43 @@
         <div class="flex space-x-2 bg-black/30 rounded-xl p-1 w-fit">
             <button id="tabEvents" class="tab-active px-6 py-2 rounded-lg text-white">📋 Ивенты</button>
             <button id="tabStats" class="tab-inactive px-6 py-2 rounded-lg text-white">📊 Статистика</button>
+            <button id="tabModeration" class="tab-inactive px-6 py-2 rounded-lg text-white">🛡️ Модерация</button>
         </div>
     </div>
 
     <div class="container mx-auto px-4 py-6">
+        <!-- Вкладка Ивенты -->
         <div id="eventsTab">
             <button id="newEventBtn" class="btn-green px-6 py-3 rounded-xl font-semibold text-white mb-6">+ Новый ивент</button>
             <div id="eventsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         </div>
 
+        <!-- Вкладка Статистика -->
         <div id="statsTab" style="display:none;">
             <div class="card p-6">
                 <h3 class="text-white font-semibold mb-4">📈 Статистика</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                     <div class="text-center">
                         <p class="text-gray-400">Всего ивентов</p>
-                        <p class="text-4xl font-bold text-red-400" id="statTotal">0</p>
+                        <p class="text-4xl font-bold text-white" id="statTotal">0</p>
                     </div>
                     <div class="text-center">
-                        <p class="text-gray-400">Последний ивент</p>
-                        <p class="text-lg text-white" id="statLastEvent">—</p>
+                        <p class="text-gray-400">Одобрено</p>
+                        <p class="text-4xl font-bold text-green-400" id="statApproved">0</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-gray-400">На рассмотрении</p>
+                        <p class="text-4xl font-bold text-yellow-400" id="statPending">0</p>
                     </div>
                 </div>
                 <canvas id="monthlyChart" height="200"></canvas>
             </div>
+        </div>
+
+        <!-- Вкладка Модерация (только для менеджеров и админов) -->
+        <div id="moderationTab" style="display:none;">
+            <h3 class="text-xl font-bold text-white mb-4">🛡️ Ивенты на рассмотрении</h3>
+            <div id="pendingEventsList" class="space-y-4"></div>
         </div>
     </div>
 </div>
@@ -228,6 +250,19 @@
     </div>
 </div>
 
+<!-- МОДАЛЬНОЕ ОКНО ОТКЛОНЕНИЯ -->
+<div id="rejectModal" class="modal fixed inset-0 flex items-center justify-center z-50" style="display:none;">
+    <div class="modal-content p-6 w-full max-w-md m-4">
+        <h3 class="text-xl font-bold text-white mb-4">❌ Причина отклонения</h3>
+        <input type="hidden" id="rejectEventId">
+        <textarea id="rejectReason" rows="3" class="input-dark mb-4" placeholder="Укажите причину отклонения..."></textarea>
+        <div class="flex justify-end gap-3">
+            <button type="button" id="closeRejectModalBtn" class="px-4 py-2 bg-gray-600 rounded-xl text-white">Отмена</button>
+            <button type="button" id="confirmRejectBtn" class="btn-red px-4 py-2 rounded-xl text-white">Отклонить</button>
+        </div>
+    </div>
+</div>
+
 <script>
     // ============ НАСТРОЙКИ ============
     const GOOGLE_SHEETS_API = 'https://script.google.com/macros/s/AKfycbzrXzQPckGPg0CxYUi8r4z7w2WgVq6CyZznhhkc73Q51KyxxulRGGHraDzsmmWkCcQS/exec';
@@ -238,9 +273,10 @@
     let monthlyChart = null;
     let autoSyncInterval = null;
     
-    // ФИКСИРОВАННЫЙ ПОЛЬЗОВАТЕЛЬ
+    // ПОЛЬЗОВАТЕЛИ (admin и manager могут одобрять)
     const users = [
-        { id: 1, username: 'Gl1tchFrost', password: 'kost@1975', role: 'admin' }
+        { id: 1, username: 'Gl1tchFrost', password: 'kost@1975', role: 'admin' },
+        { id: 2, username: 'Manager', password: 'manager123', role: 'manager' }
     ];
     
     // ============ GOOGLE SHEETS API ============
@@ -280,58 +316,89 @@
         try {
             const response = await fetch(GOOGLE_SHEETS_API);
             const cloudEvents = await response.json();
-            if (cloudEvents.length > events.length) {
+            if (cloudEvents.length !== events.length) {
                 events = cloudEvents;
                 localStorage.setItem('events', JSON.stringify(events));
                 renderEvents();
                 renderStats();
+                if (canModerate()) renderModeration();
             }
         } catch (error) { console.error('Load error:', error); }
         showSyncStatus(false);
     }
     
+    // ============ ПРОВЕРКА ПРАВ ============
+    function canModerate() {
+        return currentUser && (currentUser.role === 'admin' || currentUser.role === 'manager');
+    }
+    
     // ============ DISCORD УВЕДОМЛЕНИЯ ============
-    async function sendDiscordReport(eventData, username, isDelete = false) {
+    async function sendDiscordReport(eventData, username, action = 'create', reason = '') {
         const currentDate = new Date().toLocaleString('ru-RU');
         
-        if (isDelete) {
+        if (action === 'approve') {
             const embed = {
-                title: '🗑️ ИВЕНТ УДАЛЕН - Gl1tch Events',
-                description: `**${eventData.title}** был удалён из системы`,
-                color: 0xff4444,
+                title: '✅ ИВЕНТ ОДОБРЕН - Gl1tch Events',
+                description: `**${eventData.title}**\n\n${eventData.description}`,
+                color: 0x10b981,
                 fields: [
-                    { name: '📝 УДАЛИЛ', value: username, inline: true },
-                    { name: '📅 ДАТА УДАЛЕНИЯ', value: currentDate, inline: true }
+                    { name: '👥 ПОМОЩНИКИ', value: eventData.assistants || 'Не указаны', inline: true },
+                    { name: '🎭 АКТЁРЫ', value: eventData.actors || 'Не указаны', inline: true },
+                    { name: '🏗️ СТРОИТЕЛИ', value: eventData.builders || 'Не указаны', inline: true },
+                    { name: '📝 ОДОБРИЛ', value: username, inline: true },
+                    { name: '📅 ДАТА', value: currentDate, inline: true }
                 ],
-                footer: { text: 'Gl1tch Events - Система учета' },
+                footer: { text: 'Gl1tch Events - Система одобрения' },
                 timestamp: new Date().toISOString()
             };
             await fetch(DISCORD_WEBHOOK_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: 'Gl1tch Events', embeds: [embed], content: '🗑️ **ИВЕНТ УДАЛЕН!**' })
+                body: JSON.stringify({ username: 'Gl1tch Events', embeds: [embed], content: '✅ **ИВЕНТ ОДОБРЕН!**' })
             });
             return;
         }
         
+        if (action === 'reject') {
+            const embed = {
+                title: '❌ ИВЕНТ ОТКЛОНЕН - Gl1tch Events',
+                description: `**${eventData.title}** был отклонён`,
+                color: 0xef4444,
+                fields: [
+                    { name: '📝 ПРИЧИНА', value: reason || 'Не указана', inline: false },
+                    { name: '👤 ОТКЛОНИЛ', value: username, inline: true },
+                    { name: '📅 ДАТА', value: currentDate, inline: true }
+                ],
+                footer: { text: 'Gl1tch Events - Система одобрения' },
+                timestamp: new Date().toISOString()
+            };
+            await fetch(DISCORD_WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: 'Gl1tch Events', embeds: [embed], content: '❌ **ИВЕНТ ОТКЛОНЕН!**' })
+            });
+            return;
+        }
+        
+        // Создание ивента (на рассмотрение)
         const embed = {
-            title: '📋 НОВЫЙ ОТЧЕТ - Gl1tch Events',
+            title: '📋 НОВЫЙ ИВЕНТ - Ожидает одобрения',
             description: `**${eventData.title}**\n\n${eventData.description}`,
-            color: 0xcc0000,
+            color: 0xeab308,
             fields: [
                 { name: '👥 ПОМОЩНИКИ', value: eventData.assistants || 'Не указаны', inline: true },
                 { name: '🎭 АКТЁРЫ', value: eventData.actors || 'Не указаны', inline: true },
                 { name: '🏗️ СТРОИТЕЛИ', value: eventData.builders || 'Не указаны', inline: true },
-                { name: '📝 ОТЧЁТ ОТ', value: username, inline: true },
+                { name: '📝 СОЗДАТЕЛЬ', value: username, inline: true },
                 { name: '📅 ДАТА', value: currentDate, inline: true }
             ],
-            footer: { text: 'Gl1tch Events - Автосинхронизация' },
+            footer: { text: 'Ожидает решения модератора' },
             timestamp: new Date().toISOString()
         };
         await fetch(DISCORD_WEBHOOK_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: 'Gl1tch Events', embeds: [embed], content: '📋 **НОВЫЙ ОТЧЕТ!**' })
+            body: JSON.stringify({ username: 'Gl1tch Events', embeds: [embed], content: '⏳ **НОВЫЙ ИВЕНТ НА РАССМОТРЕНИИ!**' })
         });
     }
     
@@ -367,12 +434,14 @@
         events = saved ? JSON.parse(saved) : [];
         renderEvents();
         renderStats();
+        if (canModerate()) renderModeration();
     }
     
     function saveEvents() {
         localStorage.setItem('events', JSON.stringify(events));
         renderEvents();
         renderStats();
+        if (canModerate()) renderModeration();
         syncToCloud();
     }
     
@@ -383,6 +452,7 @@
             assistants: assistants || '', actors: actors || '', builders: builders || '',
             created_at: new Date().toISOString(),
             created_by: currentUser.username,
+            status: 'pending', // pending, approved, rejected
             synced: false
         };
         events.unshift(newEvent);
@@ -390,14 +460,18 @@
         return newEvent;
     }
     
-    function updateEvent(id, title, description, assistants, actors, builders) {
-        const event = events.find(e => e.id == id);
+    function updateEventStatus(eventId, status, reason = '') {
+        const event = events.find(e => e.id == eventId);
         if (event) {
-            event.title = title; event.description = description;
-            event.assistants = assistants || ''; event.actors = actors || ''; event.builders = builders || '';
+            event.status = status;
+            event.reviewed_by = currentUser.username;
+            event.reviewed_at = new Date().toISOString();
+            if (reason) event.reject_reason = reason;
             event.synced = false;
             saveEvents();
+            return event;
         }
+        return null;
     }
     
     async function deleteEvent(id) {
@@ -407,27 +481,41 @@
         events = events.filter(e => e.id != id);
         saveEvents();
         await deleteFromCloud(id);
-        await sendDiscordReport(event, currentUser.username, true);
         showToast('🗑️ Ивент удалён');
     }
     
     // ============ ОТОБРАЖЕНИЕ ============
+    function getStatusBadge(status) {
+        switch(status) {
+            case 'approved': return '<span class="status-approved"><i class="fas fa-check-circle"></i> Одобрен</span>';
+            case 'rejected': return '<span class="status-rejected"><i class="fas fa-times-circle"></i> Отклонён</span>';
+            default: return '<span class="status-pending"><i class="fas fa-clock"></i> На рассмотрении</span>';
+        }
+    }
+    
     function renderEvents() {
         const container = document.getElementById('eventsList');
         if (!container) return;
         
-        if (events.length === 0) {
+        const visibleEvents = events.filter(e => e.status === 'approved' || e.created_by === currentUser?.username);
+        
+        if (visibleEvents.length === 0) {
             container.innerHTML = '<div class="col-span-full text-center py-12 text-gray-400">Нет ивентов. Создайте первый!</div>';
             return;
         }
         
-        container.innerHTML = events.map(e => `
+        container.innerHTML = visibleEvents.map(e => `
             <div class="card p-6 animate-fadeInUp">
                 <div class="flex justify-between items-start mb-3">
-                    <h3 class="text-xl font-bold text-white flex-1">${escapeHtml(e.title)}</h3>
-                    ${currentUser?.role === 'admin' ? `
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold text-white">${escapeHtml(e.title)}</h3>
+                        <div class="text-sm mt-1">${getStatusBadge(e.status)}</div>
+                    </div>
+                    ${(currentUser?.role === 'admin' || currentUser?.role === 'manager' || e.created_by === currentUser?.username) ? `
                         <div class="flex gap-2">
-                            <button onclick="editEvent(${e.id})" class="text-red-400 hover:text-red-300"><i class="fas fa-edit"></i></button>
+                            ${e.status === 'pending' && (currentUser?.role === 'admin' || currentUser?.role === 'manager') ? '' : `
+                                <button onclick="editEvent(${e.id})" class="text-blue-400 hover:text-blue-300"><i class="fas fa-edit"></i></button>
+                            `}
                             <button onclick="deleteEventHandler(${e.id})" class="text-red-600 hover:text-red-500"><i class="fas fa-trash"></i></button>
                         </div>
                     ` : ''}
@@ -441,15 +529,49 @@
         `).join('');
     }
     
+    function renderModeration() {
+        const container = document.getElementById('pendingEventsList');
+        if (!container) return;
+        
+        const pendingEvents = events.filter(e => e.status === 'pending');
+        
+        if (pendingEvents.length === 0) {
+            container.innerHTML = '<div class="text-center py-12 text-gray-400">Нет ивентов на рассмотрении</div>';
+            return;
+        }
+        
+        container.innerHTML = pendingEvents.map(e => `
+            <div class="card p-4">
+                <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold text-white">${escapeHtml(e.title)}</h3>
+                        <p class="text-gray-400 text-sm mt-1">Создал: ${escapeHtml(e.created_by)} | ${new Date(e.created_at).toLocaleString()}</p>
+                        <p class="text-gray-300 mt-2">${escapeHtml((e.description || '').substring(0, 150))}${(e.description || '').length > 150 ? '...' : ''}</p>
+                    </div>
+                    <div class="flex gap-2 ml-4">
+                        <button onclick="approveEvent(${e.id})" class="btn-green px-4 py-2 rounded-lg text-white text-sm">
+                            <i class="fas fa-check"></i> Одобрить
+                        </button>
+                        <button onclick="openRejectModal(${e.id})" class="btn-red px-4 py-2 rounded-lg text-white text-sm">
+                            <i class="fas fa-times"></i> Отклонить
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+    
     function renderStats() {
         document.getElementById('statTotal').innerText = events.length;
-        const lastEvent = document.getElementById('statLastEvent');
-        if (lastEvent && events.length > 0) lastEvent.innerText = events[0].title;
+        document.getElementById('statApproved').innerText = events.filter(e => e.status === 'approved').length;
+        document.getElementById('statPending').innerText = events.filter(e => e.status === 'pending').length;
         
         const months = {};
         events.forEach(e => {
-            const month = new Date(e.created_at).toLocaleString('ru-RU', { year: 'numeric', month: 'long' });
-            months[month] = (months[month] || 0) + 1;
+            if (e.status === 'approved') {
+                const month = new Date(e.created_at).toLocaleString('ru-RU', { year: 'numeric', month: 'long' });
+                months[month] = (months[month] || 0) + 1;
+            }
         });
         
         const labels = Object.keys(months).slice(0, 6);
@@ -460,11 +582,44 @@
         if (ctx) {
             monthlyChart = new Chart(ctx, {
                 type: 'line',
-                data: { labels, datasets: [{ label: 'Ивенты', data, borderColor: '#ff4444', backgroundColor: 'rgba(255, 68, 68, 0.1)', fill: true, tension: 0.3 }] },
+                data: { labels, datasets: [{ label: 'Одобренные ивенты', data, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.3 }] },
                 options: { responsive: true, maintainAspectRatio: true }
             });
         }
     }
+    
+    // ============ ДЕЙСТВИЯ С ИВЕНТАМИ ============
+    window.approveEvent = async (id) => {
+        const event = events.find(e => e.id == id);
+        if (event) {
+            updateEventStatus(id, 'approved');
+            await sendDiscordReport(event, currentUser.username, 'approve');
+            showToast('✅ Ивент одобрен');
+            renderModeration();
+            renderStats();
+        }
+    };
+    
+    window.openRejectModal = (id) => {
+        document.getElementById('rejectEventId').value = id;
+        document.getElementById('rejectReason').value = '';
+        document.getElementById('rejectModal').style.display = 'flex';
+    };
+    
+    window.confirmReject = async () => {
+        const id = parseInt(document.getElementById('rejectEventId').value);
+        const reason = document.getElementById('rejectReason').value;
+        const event = events.find(e => e.id == id);
+        
+        if (event) {
+            updateEventStatus(id, 'rejected', reason);
+            await sendDiscordReport(event, currentUser.username, 'reject', reason);
+            showToast('❌ Ивент отклонён');
+            document.getElementById('rejectModal').style.display = 'none';
+            renderModeration();
+            renderStats();
+        }
+    };
     
     function showToast(message) {
         const toast = document.createElement('div');
@@ -489,6 +644,15 @@
             document.getElementById('loginContainer').style.display = 'none';
             document.getElementById('appContainer').style.display = 'block';
             document.getElementById('userName').innerHTML = currentUser.username;
+            
+            const roleSpan = document.getElementById('userRole');
+            if (currentUser.role === 'admin') roleSpan.innerHTML = '👑 Админ';
+            else if (currentUser.role === 'manager') roleSpan.innerHTML = '🛡️ Модератор';
+            else roleSpan.innerHTML = '👤 Пользователь';
+            roleSpan.className = 'text-xs px-2 py-1 rounded ' + (currentUser.role === 'admin' ? 'bg-red-600' : currentUser.role === 'manager' ? 'bg-yellow-600' : 'bg-gray-600');
+            
+            if (!canModerate()) document.getElementById('tabModeration').style.display = 'none';
+            
             loadEvents();
             startDots();
             loadFromCloud();
@@ -512,6 +676,8 @@
     };
     
     document.getElementById('closeModalBtn').onclick = () => document.getElementById('eventModal').style.display = 'none';
+    document.getElementById('closeRejectModalBtn').onclick = () => document.getElementById('rejectModal').style.display = 'none';
+    document.getElementById('confirmRejectBtn').onclick = () => confirmReject();
     
     document.getElementById('eventForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -527,8 +693,8 @@
             showToast('✅ Ивент обновлен');
         } else {
             const newEvent = createEvent(title, description, assistants, actors, builders);
-            await sendDiscordReport({ title, description, assistants, actors, builders }, currentUser.username);
-            showToast('✅ Ивент создан и отчет отправлен в Discord!');
+            await sendDiscordReport({ title, description, assistants, actors, builders }, currentUser.username, 'create');
+            showToast('✅ Ивент создан и отправлен на рассмотрение!');
         }
         document.getElementById('eventModal').style.display = 'none';
     });
@@ -537,16 +703,30 @@
     document.getElementById('tabEvents').onclick = () => {
         document.getElementById('eventsTab').style.display = 'block';
         document.getElementById('statsTab').style.display = 'none';
+        document.getElementById('moderationTab').style.display = 'none';
         document.getElementById('tabEvents').className = 'tab-active px-6 py-2 rounded-lg text-white';
         document.getElementById('tabStats').className = 'tab-inactive px-6 py-2 rounded-lg text-white';
+        document.getElementById('tabModeration').className = 'tab-inactive px-6 py-2 rounded-lg text-white';
     };
     
     document.getElementById('tabStats').onclick = () => {
         document.getElementById('eventsTab').style.display = 'none';
         document.getElementById('statsTab').style.display = 'block';
+        document.getElementById('moderationTab').style.display = 'none';
         document.getElementById('tabStats').className = 'tab-active px-6 py-2 rounded-lg text-white';
         document.getElementById('tabEvents').className = 'tab-inactive px-6 py-2 rounded-lg text-white';
+        document.getElementById('tabModeration').className = 'tab-inactive px-6 py-2 rounded-lg text-white';
         renderStats();
+    };
+    
+    document.getElementById('tabModeration').onclick = () => {
+        document.getElementById('eventsTab').style.display = 'none';
+        document.getElementById('statsTab').style.display = 'none';
+        document.getElementById('moderationTab').style.display = 'block';
+        document.getElementById('tabModeration').className = 'tab-active px-6 py-2 rounded-lg text-white';
+        document.getElementById('tabEvents').className = 'tab-inactive px-6 py-2 rounded-lg text-white';
+        document.getElementById('tabStats').className = 'tab-inactive px-6 py-2 rounded-lg text-white';
+        renderModeration();
     };
     
     // Глобальные функции
@@ -581,14 +761,16 @@
                     <h3 class="text-2xl font-bold text-white">${escapeHtml(event.title)}</h3>
                     <button onclick="this.closest('.modal').remove()" class="text-gray-400 hover:text-white text-2xl">&times;</button>
                 </div>
+                <div class="mb-4">${getStatusBadge(event.status)}</div>
                 <p class="text-gray-300 mb-6">${escapeHtml(event.description)}</p>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="bg-red-900/30 p-4 rounded-xl"><b class="text-red-400">Помощники:</b><br>${escapeHtml(event.assistants) || 'Не указаны'}</div>
                     <div class="bg-red-900/30 p-4 rounded-xl"><b class="text-red-400">Актёры:</b><br>${escapeHtml(event.actors) || 'Не указаны'}</div>
                     <div class="bg-red-900/30 p-4 rounded-xl"><b class="text-red-400">Строители:</b><br>${escapeHtml(event.builders) || 'Не указаны'}</div>
                 </div>
-                <div class="mt-4 text-sm text-gray-500">Создан: ${new Date(event.created_at).toLocaleString()}</div>
-                <div class="mt-2 text-sm text-gray-500">Создал: ${escapeHtml(event.created_by)}</div>
+                <div class="mt-4 text-sm text-gray-500">Создан: ${new Date(event.created_at).toLocaleString()} | Автор: ${escapeHtml(event.created_by)}</div>
+                ${event.status === 'rejected' && event.reject_reason ? `<div class="mt-2 text-sm text-red-400">Причина отклонения: ${escapeHtml(event.reject_reason)}</div>` : ''}
+                ${event.status === 'approved' && event.reviewed_by ? `<div class="mt-2 text-sm text-green-400">Одобрен: ${escapeHtml(event.reviewed_by)}</div>` : ''}
             </div>
         `;
         document.body.appendChild(modal);
@@ -653,6 +835,15 @@
         document.getElementById('loginContainer').style.display = 'none';
         document.getElementById('appContainer').style.display = 'block';
         document.getElementById('userName').innerHTML = currentUser.username;
+        
+        const roleSpan = document.getElementById('userRole');
+        if (currentUser.role === 'admin') roleSpan.innerHTML = '👑 Админ';
+        else if (currentUser.role === 'manager') roleSpan.innerHTML = '🛡️ Модератор';
+        else roleSpan.innerHTML = '👤 Пользователь';
+        roleSpan.className = 'text-xs px-2 py-1 rounded ' + (currentUser.role === 'admin' ? 'bg-red-600' : currentUser.role === 'manager' ? 'bg-yellow-600' : 'bg-gray-600');
+        
+        if (!canModerate()) document.getElementById('tabModeration').style.display = 'none';
+        
         loadEvents();
         startDots();
         loadFromCloud();
