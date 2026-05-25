@@ -37,22 +37,81 @@
         .user-card:hover { background: rgba(255, 255, 255, 0.05); transform: translateX(5px); }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fadeInUp { animation: fadeInUp 0.4s ease-out forwards; }
-        .toast { position: fixed; bottom: 20px; right: 20px; background: #10b981; color: white; padding: 12px 24px; border-radius: 8px; z-index: 1000; animation: slideIn 0.3s ease-out; }
-        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        .status-pending { color: #eab308; }
-        .status-approved { color: #10b981; }
-        .status-rejected { color: #ef4444; }
-        .blob { position: fixed; background: radial-gradient(circle, rgba(255, 30, 30, 0.15) 0%, rgba(180, 0, 0, 0.08) 50%, transparent 70%); border-radius: 50%; filter: blur(50px); pointer-events: none; z-index: 0; animation: floatBlob 25s ease-in-out infinite alternate; }
-        @keyframes floatBlob { 0% { transform: translate(0, 0) scale(1); opacity: 0.4; } 50% { transform: translate(5%, 3%) scale(1.2); opacity: 0.6; } 100% { transform: translate(-3%, 5%) scale(0.9); opacity: 0.3; } }
-        .red-dot { position: fixed; background: radial-gradient(circle, #ff4444 0%, #ff0000 40%, #990000 80%); border-radius: 50%; box-shadow: 0 0 12px #ff0000, 0 0 25px rgba(255, 0, 0, 0.5); pointer-events: none; z-index: 1; }
-        .modal { background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px); z-index: 100; }
-        .modal-content { background: rgba(20, 20, 30, 0.95); border: 1px solid #cc0000; border-radius: 1rem; }
-        .input-dark { background: rgba(0, 0, 0, 0.65); border: 1px solid rgba(255, 60, 60, 0.3); color: white; border-radius: 0.75rem; padding: 0.75rem; width: 100%; }
-        .input-dark:focus { border-color: #cc0000; outline: none; box-shadow: 0 0 10px rgba(204, 0, 0, 0.3); }
-        .btn-red { background: linear-gradient(135deg, #cc0000 0%, #8b0000 100%); transition: all 0.3s ease; }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .blob {
+            position: fixed;
+            background: radial-gradient(circle, rgba(255, 30, 30, 0.15) 0%, rgba(180, 0, 0, 0.08) 50%, transparent 70%);
+            border-radius: 50%;
+            filter: blur(50px);
+            pointer-events: none;
+            z-index: 0;
+            animation: floatBlob 25s ease-in-out infinite alternate;
+        }
+        @keyframes floatBlob {
+            0% { transform: translate(0, 0) scale(1); opacity: 0.4; }
+            50% { transform: translate(5%, 3%) scale(1.2); opacity: 0.6; }
+            100% { transform: translate(-3%, 5%) scale(0.9); opacity: 0.3; }
+        }
+        .red-dot {
+            position: fixed;
+            background: radial-gradient(circle, #ff4444 0%, #ff0000 40%, #990000 80%);
+            border-radius: 50%;
+            box-shadow: 0 0 12px #ff0000, 0 0 25px rgba(255, 0, 0, 0.5);
+            pointer-events: none;
+            z-index: 1;
+        }
+        .modal {
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(5px);
+            z-index: 100;
+        }
+        .modal-content {
+            background: rgba(20, 20, 30, 0.95);
+            border: 1px solid #cc0000;
+            border-radius: 1rem;
+        }
+        .input-dark {
+            background: rgba(0, 0, 0, 0.65);
+            border: 1px solid rgba(255, 60, 60, 0.3);
+            color: white;
+            border-radius: 0.75rem;
+            padding: 0.75rem;
+            width: 100%;
+        }
+        .input-dark:focus {
+            border-color: #cc0000;
+            outline: none;
+            box-shadow: 0 0 10px rgba(204, 0, 0, 0.3);
+        }
+        .btn-red {
+            background: linear-gradient(135deg, #cc0000 0%, #8b0000 100%);
+            transition: all 0.3s ease;
+        }
         .btn-red:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(255, 0, 0, 0.5); }
-        .btn-green { background: linear-gradient(135deg, #10b981 0%, #059669 100%); transition: all 0.3s ease; }
+        .btn-green {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            transition: all 0.3s ease;
+        }
         .btn-green:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4); }
+        .btn-blue {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            transition: all 0.3s ease;
+        }
+        .btn-blue:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4); }
     </style>
 </head>
 <body>
@@ -115,12 +174,12 @@
                     <i class="fas fa-chart-line w-5 text-blue-400"></i>
                     <span class="text-gray-300">📊 Статистика</span>
                 </div>
-                <div class="nav-item px-4 py-3 rounded-lg flex items-center space-x-3" data-tab="moderation">
-                    <i class="fas fa-shield-alt w-5 text-yellow-400"></i>
-                    <span class="text-gray-300">🛡️ Модерация</span>
+                <div class="nav-item px-4 py-3 rounded-lg flex items-center space-x-3" data-tab="announce">
+                    <i class="fas fa-bullhorn w-5 text-green-400"></i>
+                    <span class="text-gray-300">📢 Анонс</span>
                 </div>
                 <div class="nav-item px-4 py-3 rounded-lg flex items-center space-x-3" data-tab="users">
-                    <i class="fas fa-users w-5 text-green-400"></i>
+                    <i class="fas fa-users w-5 text-purple-400"></i>
                     <span class="text-gray-300">👥 Пользователи</span>
                 </div>
             </div>
@@ -135,11 +194,13 @@
     
     <div class="main-content">
         <div class="container mx-auto px-6 py-8">
+            <!-- Ивенты -->
             <div id="eventsTab" class="tab-content">
                 <button id="newEventBtn" class="btn-green px-6 py-3 rounded-xl font-semibold text-white mb-6">+ Новый ивент</button>
                 <div id="eventsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
             </div>
 
+            <!-- Статистика -->
             <div id="statsTab" class="tab-content" style="display:none;">
                 <div class="card p-6 bg-white/5 rounded-xl">
                     <h3 class="text-white font-semibold mb-4 text-xl">📈 Статистика</h3>
@@ -148,29 +209,42 @@
                             <p class="text-gray-400">Всего ивентов</p>
                             <p class="text-4xl font-bold text-white" id="statTotal">0</p>
                         </div>
-                        <div class="text-center p-4 bg-white/5 rounded-xl">
-                            <p class="text-gray-400">На рассмотрении</p>
-                            <p class="text-4xl font-bold text-yellow-400" id="statPending">0</p>
-                        </div>
                     </div>
                     <canvas id="monthlyChart" height="200"></canvas>
                 </div>
             </div>
 
-            <div id="moderationTab" class="tab-content" style="display:none;">
-                <h3 class="text-xl font-bold text-white mb-4">🛡️ Ивенты на рассмотрении</h3>
-                <div id="pendingEventsList" class="space-y-4"></div>
+            <!-- Анонс -->
+            <div id="announceTab" class="tab-content" style="display:none;">
+                <div class="card p-6 bg-white/5 rounded-xl">
+                    <h3 class="text-xl font-bold text-white mb-4">📢 Создать анонс ивента</h3>
+                    <form id="announceForm">
+                        <input type="text" id="announceTitle" placeholder="Название ивента" class="input-dark mb-3" required>
+                        <textarea id="announceDescription" placeholder="Описание ивента" rows="3" class="input-dark mb-3" required></textarea>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                            <input type="number" id="announceHelpers" placeholder="👥 Требуется помощников" class="input-dark" min="0" value="0">
+                            <input type="number" id="announceActors" placeholder="🎭 Требуется актёров" class="input-dark" min="0" value="0">
+                            <input type="number" id="announceBuilders" placeholder="🏗️ Требуется строителей" class="input-dark" min="0" value="0">
+                        </div>
+                        <textarea id="announceExtra" placeholder="Дополнительная информация (дата, время, требования и т.д.)" rows="2" class="input-dark mb-4"></textarea>
+                        <button type="submit" class="btn-blue w-full py-3 rounded-xl font-semibold text-white">
+                            <i class="fas fa-paper-plane mr-2"></i> Опубликовать анонс в Discord
+                        </button>
+                    </form>
+                </div>
             </div>
 
+            <!-- Пользователи -->
             <div id="usersTab" class="tab-content" style="display:none;">
-                <h3 class="text-xl font-bold text-white mb-4">👥 Пользователи (из Google Sheets)</h3>
-                <p class="text-gray-400 text-sm mb-4">Добавлять пользователей можно прямо в <a href="#" id="sheetLink" class="text-red-400 hover:underline">Google Таблицу</a></p>
+                <h3 class="text-xl font-bold text-white mb-4">👥 Пользователи</h3>
+                <p class="text-gray-400 text-sm mb-4">Добавлять пользователей можно прямо в <a href="https://docs.google.com/spreadsheets/d/1ouZL26S8NhHkTROGHif776zzEqmI3cKA4TT3NE2ufi0/edit" target="_blank" class="text-red-400 hover:underline">Google Таблицу</a></p>
                 <div id="usersList" class="space-y-3"></div>
             </div>
         </div>
     </div>
 </div>
 
+<!-- МОДАЛЬНОЕ ОКНО СОЗДАНИЯ ИВЕНТА -->
 <div id="eventModal" class="modal fixed inset-0 flex items-center justify-center z-50" style="display:none;">
     <div class="modal-content p-6 w-full max-w-md m-4">
         <h3 id="modalTitle" class="text-xl font-bold text-white mb-4">Новый ивент</h3>
@@ -189,35 +263,62 @@
     </div>
 </div>
 
-<div id="rejectModal" class="modal fixed inset-0 flex items-center justify-center z-50" style="display:none;">
-    <div class="modal-content p-6 w-full max-w-md m-4">
-        <h3 class="text-xl font-bold text-white mb-4">❌ Причина отклонения</h3>
-        <input type="hidden" id="rejectEventId">
-        <textarea id="rejectReason" rows="3" class="input-dark mb-4" placeholder="Укажите причину отклонения..."></textarea>
-        <div class="flex justify-end gap-3">
-            <button type="button" id="closeRejectModalBtn" class="px-4 py-2 bg-gray-600 rounded-xl text-white">Отмена</button>
-            <button type="button" id="confirmRejectBtn" class="btn-red px-4 py-2 rounded-xl text-white">Отклонить</button>
-        </div>
-    </div>
-</div>
-
 <script>
     // ============ ВАШИ URL ============
-    const USERS_SHEET_API = 'https://script.google.com/macros/s/AKfycbzKMkOUTJzcMGBZxRu2vpnIaM-Uwzp62gXQ8nZtM-l1_KsTUZW3Ox5g-oFMvBlFymkBiQ/exec';
+    const USERS_SHEET_API = 'https://script.google.com/macros/s/AKfycbxcpQ2oO5n9TJw6b04xJ7DrF8fgtT8EQ960FH0BqMfWzN4051BHkNOis3Uj0R3Tz9a5BA/exec';
     const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1507778037197050057/wnyKFFsvAOKtdPFghv8mj2asH_xQOoFXsHJyemo53cj6jxWYRJccAZmVQuTdoiqiXDCb';
+    const ANNOUNCE_WEBHOOK_URL = 'https://discord.com/api/webhooks/1507826979544633424/LwuAJ79T2NZoGyV08n45xwOUWfHB4ObLLZ98hLM-N2TOEaINRJV2OCSaIciQLJo1LCD4';
     
     let currentUser = null;
     let events = [];
     let users = [];
     let monthlyChart = null;
     
-    // ============ ОТПРАВКА В DISCORD ============
+    // ============ ОТПРАВКА АНОНСА ============
+    async function sendAnnouncement(data) {
+        const currentDate = new Date().toLocaleString('ru-RU');
+        const embed = {
+            title: '📢 АНОНС ИВЕНТА',
+            description: `**${data.title}**\n\n${data.description}`,
+            color: 0x3b82f6,
+            fields: [
+                { name: '👥 ТРЕБУЕТСЯ ПОМОЩНИКОВ', value: `${data.helpers} человек`, inline: true },
+                { name: '🎭 ТРЕБУЕТСЯ АКТЁРОВ', value: `${data.actors} человек`, inline: true },
+                { name: '🏗️ ТРЕБУЕТСЯ СТРОИТЕЛЕЙ', value: `${data.builders} человек`, inline: true }
+            ],
+            footer: { text: `Gl1tch Events | ${currentDate}` },
+            timestamp: new Date().toISOString()
+        };
+        
+        if (data.extra) {
+            embed.fields.push({ name: '📝 ДОПОЛНИТЕЛЬНО', value: data.extra, inline: false });
+        }
+        
+        try {
+            const response = await fetch(ANNOUNCE_WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: 'Gl1tch Events',
+                    avatar_url: 'https://cdn.discordapp.com/embed/avatars/1.png',
+                    embeds: [embed],
+                    content: '@everyone **НОВЫЙ АНОНС ИВЕНТА!**'
+                })
+            });
+            return response.ok;
+        } catch (error) {
+            console.error('Ошибка отправки анонса:', error);
+            return false;
+        }
+    }
+    
+    // ============ ОТПРАВКА В DISCORD (ивент) ============
     async function sendDiscordReport(eventData, username) {
         const currentDate = new Date().toLocaleString('ru-RU');
         const embed = {
-            title: '📋 НОВЫЙ ИВЕНТ - Ожидает одобрения',
+            title: '📋 НОВЫЙ ИВЕНТ',
             description: `**${eventData.title}**\n\n${eventData.description}`,
-            color: 0xeab308,
+            color: 0xcc0000,
             fields: [
                 { name: '👥 ПОМОЩНИКИ', value: eventData.assistants || 'Не указаны', inline: true },
                 { name: '🎭 АКТЁРЫ', value: eventData.actors || 'Не указаны', inline: true },
@@ -225,66 +326,34 @@
                 { name: '📝 СОЗДАТЕЛЬ', value: username, inline: true },
                 { name: '📅 ДАТА', value: currentDate, inline: true }
             ],
-            footer: { text: 'Gl1tch Events - Ожидает решения модератора' },
+            footer: { text: 'Gl1tch Events' },
             timestamp: new Date().toISOString()
         };
         
         try {
-            await fetch(DISCORD_WEBHOOK_URL, {
+            const response = await fetch(DISCORD_WEBHOOK_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    username: 'Gl1tch Events', 
-                    embeds: [embed], 
-                    content: '⏳ **НОВЫЙ ИВЕНТ НА РАССМОТРЕНИИ!**' 
-                })
+                body: JSON.stringify({ username: 'Gl1tch Events', embeds: [embed], content: '📋 **НОВЫЙ ИВЕНТ!**' })
             });
-            console.log('✅ Отправлено в Discord');
+            const data = await response.json();
+            return { ok: response.ok, messageId: data.id };
         } catch (error) {
-            console.error('❌ Ошибка отправки в Discord:', error);
+            console.error('Ошибка отправки в Discord:', error);
+            return { ok: false, messageId: null };
         }
     }
     
-    async function sendApprovalReport(eventData, username) {
-        const embed = {
-            title: '✅ ИВЕНТ ОДОБРЕН',
-            description: `**${eventData.title}**\n\n${eventData.description}`,
-            color: 0x10b981,
-            fields: [
-                { name: '👥 ПОМОЩНИКИ', value: eventData.assistants || 'Не указаны', inline: true },
-                { name: '🎭 АКТЁРЫ', value: eventData.actors || 'Не указаны', inline: true },
-                { name: '🏗️ СТРОИТЕЛИ', value: eventData.builders || 'Не указаны', inline: true },
-                { name: '📝 ОДОБРИЛ', value: username, inline: true }
-            ],
-            footer: { text: 'Gl1tch Events' },
-            timestamp: new Date().toISOString()
-        };
-        await fetch(DISCORD_WEBHOOK_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: 'Gl1tch Events', embeds: [embed], content: '✅ **ИВЕНТ ОДОБРЕН!**' })
-        });
-    }
-    
-    async function sendRejectionReport(eventData, username, reason) {
-        const embed = {
-            title: '❌ ИВЕНТ ОТКЛОНЕН',
-            description: `**${eventData.title}**\n\nПричина: ${reason}`,
-            color: 0xef4444,
-            fields: [
-                { name: '👥 ПОМОЩНИКИ', value: eventData.assistants || 'Не указаны', inline: true },
-                { name: '🎭 АКТЁРЫ', value: eventData.actors || 'Не указаны', inline: true },
-                { name: '🏗️ СТРОИТЕЛИ', value: eventData.builders || 'Не указаны', inline: true },
-                { name: '📝 ОТКЛОНИЛ', value: username, inline: true }
-            ],
-            footer: { text: 'Gl1tch Events' },
-            timestamp: new Date().toISOString()
-        };
-        await fetch(DISCORD_WEBHOOK_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: 'Gl1tch Events', embeds: [embed], content: '❌ **ИВЕНТ ОТКЛОНЕН!**' })
-        });
+    async function deleteDiscordMessage(messageId) {
+        if (!messageId) return;
+        try {
+            await fetch(`${DISCORD_WEBHOOK_URL}/messages/${messageId}`, {
+                method: 'DELETE'
+            });
+            console.log('Сообщение в Discord удалено');
+        } catch (error) {
+            console.error('Ошибка удаления сообщения:', error);
+        }
     }
     
     // ============ ЗАГРУЗКА ПОЛЬЗОВАТЕЛЕЙ ============
@@ -292,12 +361,9 @@
         try {
             const response = await fetch(USERS_SHEET_API);
             users = await response.json();
-            localStorage.setItem('users', JSON.stringify(users));
             renderUsersList();
         } catch (error) {
-            const saved = localStorage.getItem('users');
-            if (saved) users = JSON.parse(saved);
-            renderUsersList();
+            console.error('Ошибка загрузки пользователей:', error);
         }
     }
     
@@ -310,6 +376,11 @@
             'manager': '<span class="text-yellow-400"><i class="fas fa-shield-alt"></i> Модератор</span>',
             'user': '<span class="text-blue-400"><i class="fas fa-user"></i> Пользователь</span>'
         };
+        
+        if (!users || users.length === 0) {
+            container.innerHTML = '<div class="text-center py-8 text-gray-400">Нет пользователей. Добавьте в Google Таблицу</div>';
+            return;
+        }
         
         container.innerHTML = users.map(u => `
             <div class="user-card flex items-center justify-between p-3 bg-white/5 rounded-xl">
@@ -324,6 +395,7 @@
         `).join('');
     }
     
+    // ============ АВТОРИЗАЦИЯ ============
     function login(username, password) {
         const user = users.find(u => u.username === username && u.password === password);
         if (user) {
@@ -336,19 +408,18 @@
         return false;
     }
     
+    // ============ ИВЕНТЫ ============
     function loadEvents() {
         const saved = localStorage.getItem('events');
         events = saved ? JSON.parse(saved) : [];
         renderEvents();
         renderStats();
-        renderModeration();
     }
     
     function saveEvents() {
         localStorage.setItem('events', JSON.stringify(events));
         renderEvents();
         renderStats();
-        renderModeration();
     }
     
     async function createEvent(title, description, assistants, actors, builders) {
@@ -357,58 +428,51 @@
             title, description,
             assistants: assistants || '', actors: actors || '', builders: builders || '',
             created_at: new Date().toISOString(),
-            created_by: currentUser.username,
-            status: 'pending'
+            created_by: currentUser.username
         };
+        
+        // Отправляем в Discord и сохраняем message_id
+        const result = await sendDiscordReport(newEvent, currentUser.username);
+        if (result.ok && result.messageId) {
+            newEvent.message_id = result.messageId;
+        }
+        
         events.unshift(newEvent);
         saveEvents();
-        
-        // Отправка в Discord
-        await sendDiscordReport(newEvent, currentUser.username);
-        
         return newEvent;
     }
     
-    function updateEventStatus(eventId, status, reason = '') {
-        const event = events.find(e => e.id == eventId);
-        if (event) {
-            event.status = status;
-            event.reviewed_by = currentUser.username;
-            event.reviewed_at = new Date().toISOString();
-            if (reason) event.reject_reason = reason;
-            saveEvents();
-            return event;
+    async function deleteEvent(id) {
+        const event = events.find(e => e.id == id);
+        if (event && event.message_id) {
+            await deleteDiscordMessage(event.message_id);
         }
-        return null;
-    }
-    
-    function deleteEvent(id) {
         events = events.filter(e => e.id != id);
         saveEvents();
-        showToast('🗑️ Ивент удалён');
+        showToast('🗑️ Ивент удалён из таблицы и из Discord');
     }
     
     function renderEvents() {
         const container = document.getElementById('eventsList');
         if (!container) return;
         
-        const visibleEvents = events.filter(e => e.status === 'approved' || e.created_by === currentUser?.username);
-        
-        if (visibleEvents.length === 0) {
+        if (events.length === 0) {
             container.innerHTML = '<div class="col-span-full text-center py-12 text-gray-400">Нет ивентов. Создайте первый!</div>';
             return;
         }
         
-        container.innerHTML = visibleEvents.map(e => `
+        container.innerHTML = events.map(e => `
             <div class="card p-5 bg-white/5 rounded-xl animate-fadeInUp">
                 <div class="flex justify-between items-start mb-3">
                     <div class="flex-1">
                         <h3 class="text-xl font-bold text-white">${escapeHtml(e.title)}</h3>
-                        <div class="text-sm mt-1">${getStatusBadge(e.status)}</div>
                     </div>
-                    <div class="flex gap-2">
-                        <button onclick="deleteEventHandler(${e.id})" class="text-red-500 hover:text-red-400"><i class="fas fa-trash"></i></button>
-                    </div>
+                    ${currentUser?.role === 'admin' ? `
+                        <div class="flex gap-2">
+                            <button onclick="editEvent(${e.id})" class="text-blue-500 hover:text-blue-400"><i class="fas fa-edit"></i></button>
+                            <button onclick="deleteEventHandler(${e.id})" class="text-red-500 hover:text-red-400"><i class="fas fa-trash"></i></button>
+                        </div>
+                    ` : ''}
                 </div>
                 <p class="text-gray-300 mb-3">${escapeHtml((e.description || '').substring(0, 100))}${(e.description || '').length > 100 ? '...' : ''}</p>
                 <div class="flex justify-between items-center text-sm text-gray-500">
@@ -419,37 +483,8 @@
         `).join('');
     }
     
-    function renderModeration() {
-        const container = document.getElementById('pendingEventsList');
-        if (!container) return;
-        
-        const pendingEvents = events.filter(e => e.status === 'pending');
-        
-        if (pendingEvents.length === 0) {
-            container.innerHTML = '<div class="text-center py-12 text-gray-400">Нет ивентов на рассмотрении</div>';
-            return;
-        }
-        
-        container.innerHTML = pendingEvents.map(e => `
-            <div class="card p-4 bg-white/5 rounded-xl">
-                <div class="flex justify-between items-start">
-                    <div class="flex-1">
-                        <h3 class="text-xl font-bold text-white">${escapeHtml(e.title)}</h3>
-                        <p class="text-gray-400 text-sm mt-1">Создал: ${escapeHtml(e.created_by)} | ${new Date(e.created_at).toLocaleString()}</p>
-                        <p class="text-gray-300 mt-2">${escapeHtml((e.description || '').substring(0, 150))}${(e.description || '').length > 150 ? '...' : ''}</p>
-                    </div>
-                    <div class="flex gap-2 ml-4">
-                        <button onclick="approveEvent(${e.id})" class="btn-green px-4 py-2 rounded-lg text-white text-sm"><i class="fas fa-check"></i> Одобрить</button>
-                        <button onclick="openRejectModal(${e.id})" class="btn-red px-4 py-2 rounded-lg text-white text-sm"><i class="fas fa-times"></i> Отклонить</button>
-                    </div>
-                </div>
-            </div>
-        `).join('');
-    }
-    
     function renderStats() {
         document.getElementById('statTotal').innerText = events.length;
-        document.getElementById('statPending').innerText = events.filter(e => e.status === 'pending').length;
         
         const months = {};
         events.forEach(e => {
@@ -471,14 +506,6 @@
         }
     }
     
-    function getStatusBadge(status) {
-        switch(status) {
-            case 'approved': return '<span class="status-approved"><i class="fas fa-check-circle"></i> Одобрен</span>';
-            case 'rejected': return '<span class="status-rejected"><i class="fas fa-times-circle"></i> Отклонён</span>';
-            default: return '<span class="status-pending"><i class="fas fa-clock"></i> На рассмотрении</span>';
-        }
-    }
-    
     function showToast(message) {
         const toast = document.createElement('div');
         toast.className = 'toast';
@@ -487,37 +514,23 @@
         setTimeout(() => toast.remove(), 3000);
     }
     
-    window.approveEvent = async (id) => {
-        const event = updateEventStatus(id, 'approved');
-        if (event) {
-            await sendApprovalReport(event, currentUser.username);
-            showToast('✅ Ивент одобрен');
-            renderModeration();
-            renderStats();
+    // ============ ОБРАБОТЧИКИ ============
+    window.editEvent = (id) => {
+        const event = events.find(e => e.id == id);
+        document.getElementById('eventId').value = event.id;
+        document.getElementById('eventTitle').value = event.title;
+        document.getElementById('eventDescription').value = event.description;
+        document.getElementById('eventAssistants').value = event.assistants || '';
+        document.getElementById('eventActors').value = event.actors || '';
+        document.getElementById('eventBuilders').value = event.builders || '';
+        document.getElementById('modalTitle').innerText = 'Редактировать ивент';
+        document.getElementById('eventModal').style.display = 'flex';
+    };
+    
+    window.deleteEventHandler = async (id) => {
+        if (confirm('🗑️ Удалить ивент? Сообщение в Discord также будет удалено!')) {
+            await deleteEvent(id);
         }
-    };
-    
-    window.openRejectModal = (id) => {
-        document.getElementById('rejectEventId').value = id;
-        document.getElementById('rejectReason').value = '';
-        document.getElementById('rejectModal').style.display = 'flex';
-    };
-    
-    window.confirmReject = async () => {
-        const id = parseInt(document.getElementById('rejectEventId').value);
-        const reason = document.getElementById('rejectReason').value;
-        const event = updateEventStatus(id, 'rejected', reason);
-        if (event) {
-            await sendRejectionReport(event, currentUser.username, reason);
-            showToast('❌ Ивент отклонён');
-            document.getElementById('rejectModal').style.display = 'none';
-            renderModeration();
-            renderStats();
-        }
-    };
-    
-    window.deleteEventHandler = (id) => {
-        if (confirm('🗑️ Удалить ивент?')) deleteEvent(id);
     };
     
     window.showDetail = (id) => {
@@ -533,7 +546,6 @@
                     <h3 class="text-2xl font-bold text-white">${escapeHtml(event.title)}</h3>
                     <button onclick="this.closest('.modal').remove()" class="text-gray-400 hover:text-white text-2xl">&times;</button>
                 </div>
-                <div class="mb-4">${getStatusBadge(event.status)}</div>
                 <p class="text-gray-300 mb-6">${escapeHtml(event.description)}</p>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="bg-red-900/30 p-4 rounded-xl"><b class="text-red-400">Помощники:</b><br>${escapeHtml(event.assistants) || 'Не указаны'}</div>
@@ -541,7 +553,6 @@
                     <div class="bg-red-900/30 p-4 rounded-xl"><b class="text-red-400">Строители:</b><br>${escapeHtml(event.builders) || 'Не указаны'}</div>
                 </div>
                 <div class="mt-4 text-sm text-gray-500">Создан: ${new Date(event.created_at).toLocaleString()} | Автор: ${escapeHtml(event.created_by)}</div>
-                ${event.status === 'rejected' && event.reject_reason ? `<div class="mt-2 text-sm text-red-400">Причина отклонения: ${escapeHtml(event.reject_reason)}</div>` : ''}
             </div>
         `;
         document.body.appendChild(modal);
@@ -554,6 +565,7 @@
         return div.innerHTML;
     }
     
+    // ============ НАВИГАЦИЯ ============
     document.querySelectorAll('.nav-item').forEach(item => {
         item.addEventListener('click', () => {
             const tab = item.dataset.tab;
@@ -564,6 +576,7 @@
         });
     });
     
+    // ============ ВХОД/ВЫХОД ============
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const username = document.getElementById('username').value;
@@ -576,6 +589,10 @@
             document.getElementById('appContainer').style.display = 'block';
             loadEvents();
             showToast(`Добро пожаловать, ${username}!`);
+            
+            setInterval(async () => {
+                await loadUsers();
+            }, 10000);
         } else {
             alert('Неверный логин или пароль');
         }
@@ -595,24 +612,48 @@
     };
     
     document.getElementById('closeModalBtn').onclick = () => document.getElementById('eventModal').style.display = 'none';
-    document.getElementById('closeRejectModalBtn').onclick = () => document.getElementById('rejectModal').style.display = 'none';
     
     document.getElementById('eventForm').addEventListener('submit', async (e) => {
         e.preventDefault();
+        const id = document.getElementById('eventId').value;
         const title = document.getElementById('eventTitle').value;
         const description = document.getElementById('eventDescription').value;
         const assistants = document.getElementById('eventAssistants').value;
         const actors = document.getElementById('eventActors').value;
         const builders = document.getElementById('eventBuilders').value;
         
-        await createEvent(title, description, assistants, actors, builders);
-        showToast('✅ Ивент создан и отправлен на рассмотрение!');
+        if (id) {
+            showToast('✅ Ивент обновлён');
+        } else {
+            await createEvent(title, description, assistants, actors, builders);
+            showToast('✅ Ивент создан и отправлен в Discord!');
+        }
         document.getElementById('eventModal').style.display = 'none';
     });
     
-    document.getElementById('sheetLink').href = 'https://docs.google.com/spreadsheets/d/1ouZL26S8NhHkTROGHif776zzEqmI3cKA4TT3NE2ufi0/edit';
+    // Анонс
+    document.getElementById('announceForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const title = document.getElementById('announceTitle').value;
+        const description = document.getElementById('announceDescription').value;
+        const helpers = document.getElementById('announceHelpers').value;
+        const actors = document.getElementById('announceActors').value;
+        const builders = document.getElementById('announceBuilders').value;
+        const extra = document.getElementById('announceExtra').value;
+        
+        const success = await sendAnnouncement({
+            title, description, helpers, actors, builders, extra
+        });
+        
+        if (success) {
+            showToast('✅ Анонс опубликован в Discord!');
+            document.getElementById('announceForm').reset();
+        } else {
+            showToast('❌ Ошибка публикации анонса');
+        }
+    });
     
-    // АНИМАЦИЯ ТОЧЕК
+    // ============ АНИМАЦИЯ ТОЧЕК ============
     const blobsContainer = document.getElementById('blobsContainer');
     for (let i = 0; i < 12; i++) {
         const blob = document.createElement('div');
@@ -661,6 +702,7 @@
     
     startDots();
     
+    // ============ ПРОВЕРКА СЕССИИ ============
     const savedUser = localStorage.getItem('currentUser');
     if (savedUser) {
         currentUser = JSON.parse(savedUser);
@@ -670,6 +712,10 @@
         document.getElementById('userRole').innerHTML = currentUser.role === 'admin' ? '👑 Администратор' : '🛡️ Модератор';
         loadEvents();
         loadUsers();
+        
+        setInterval(async () => {
+            await loadUsers();
+        }, 10000);
     }
 </script>
 
