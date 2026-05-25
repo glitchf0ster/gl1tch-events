@@ -386,7 +386,7 @@
             await fetch(ANNOUNCE_WEBHOOK_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: 'Gl1tch Events', embeds: [embed], content: '@everyone **НОВЫЙ АНОНС ИВЕНТА!**' })
+                body: JSON.stringify({ username: 'Gl1tch Events', embeds: [embed], content: ' **НОВЫЙ АНОНС ИВЕНТА!**' })
             });
             return true;
         } catch (error) { return false; }
