@@ -257,7 +257,7 @@
 
             <div id="usersTab" class="tab-content" style="display:none;">
                 <h3 class="text-xl font-bold text-white mb-4">👥 Пользователи</h3>
-                <p class="text-gray-400 text-sm mb-4">Добавлять пользователей можно прямо в <a href="https://docs.google.com/spreadsheets/d/1ouZL26S8NhHkTROGHif776zzEqmI3cKA4TT3NE2ufi0/edit" target="_blank" class="text-red-400 hover:underline">Google Таблицу</a> (обновляется каждые 10 секунд)</p>
+                <p class="text-gray-400 text-sm mb-4">Данные синхронизируются с Google Таблицей (обновляется каждые 10 сек)</p>
                 <div id="usersList" class="space-y-3"></div>
             </div>
         </div>
@@ -302,7 +302,7 @@
 
 <script>
     // ============ ВАШИ URL ============
-    const USERS_SHEET_API = 'https://script.google.com/macros/s/AKfycbyYOj82CI0rgTklZbjZso8YKR8ubC_OZL9X_26zxk9CJAqQedAiUSGwd6lsDGKiJhAE1g/exec';
+    const USERS_SHEET_API = 'https://script.google.com/macros/s/AKfycbxcpQ2oO5n9TJw6b04xJ7DrF8fgtT8EQ960FH0BqMfWzN4051BHkNOis3Uj0R3Tz9a5BA/exec';
     const EVENTS_SHEET_API = 'https://script.google.com/macros/s/AKfycbybP2YpSFVED9nho8oN2jHYWagaO0ytvnEBTMF0y37Vn7pqHqC1zNpXRbpw77nkxF4KzA/exec';
     const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1507778037197050057/wnyKFFsvAOKtdPFghv8mj2asH_xQOoFXsHJyemo53cj6jxWYRJccAZmVQuTdoiqiXDCb';
     const ANNOUNCE_WEBHOOK_URL = 'https://discord.com/api/webhooks/1507826979544633424/LwuAJ79T2NZoGyV08n45xwOUWfHB4ObLLZ98hLM-N2TOEaINRJV2OCSaIciQLJo1LCD4';
@@ -312,24 +312,40 @@
     let users = [];
     let monthlyChart = null;
     let usersUpdateInterval = null;
-    let eventsUpdateInterval = null;
     
     // ============ ЗАГРУЗКА ПОЛЬЗОВАТЕЛЕЙ ИЗ GOOGLE SHEETS ============
     async function loadUsers() {
         try {
+            console.log('🔄 Загрузка пользователей из таблицы...');
             const response = await fetch(USERS_SHEET_API);
             const freshUsers = await response.json();
+            
             if (freshUsers && freshUsers.length > 0) {
-                users = freshUsers;
+                // Фильтруем только нужные поля
+                users = freshUsers.map(u => ({
+                    id: u.id,
+                    username: u.username,
+                    password: u.password,  // ← ПАРОЛЬ СИНХРОНИЗИРУЕТСЯ!
+                    role: u.role || 'user',
+                    avatar: u.avatar || null
+                }));
                 localStorage.setItem('users', JSON.stringify(users));
                 renderUsersList();
-                console.log('✅ Пользователи обновлены:', users.length);
+                console.log('✅ Загружено пользователей:', users.length);
+                console.log('👤 Пользователи:', users.map(u => `${u.username} (${u.password})`).join(', '));
+            } else {
+                // Если таблица пустая, создаём админа по умолчанию
+                users = [{ id: 1, username: 'Gl1tchFrost', password: 'kost@1975', role: 'admin', avatar: null }];
+                localStorage.setItem('users', JSON.stringify(users));
+                renderUsersList();
             }
         } catch (error) {
-            console.error('Ошибка загрузки пользователей:', error);
+            console.error('❌ Ошибка загрузки пользователей:', error);
             const saved = localStorage.getItem('users');
-            if (saved) users = JSON.parse(saved);
-            renderUsersList();
+            if (saved) {
+                users = JSON.parse(saved);
+                renderUsersList();
+            }
         }
     }
     
@@ -355,6 +371,7 @@
                     <div>
                         <p class="text-white font-medium">${escapeHtml(u.username)}</p>
                         <p class="text-xs">${roleLabels[u.role] || u.role}</p>
+                        <p class="text-xs text-gray-500">Пароль: ••••••</p>
                     </div>
                 </div>
             </div>
@@ -363,6 +380,7 @@
     
     // ============ АВТОРИЗАЦИЯ ============
     function login(username, password) {
+        // Ищем пользователя с таким логином и паролем
         const user = users.find(u => u.username === username && u.password === password);
         if (user) {
             currentUser = user;
@@ -433,7 +451,7 @@
             await fetch(ANNOUNCE_WEBHOOK_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: 'Gl1tch Events', embeds: [embed], content: '**НОВЫЙ АНОНС ИВЕНТА!**' })
+                body: JSON.stringify({ username: 'Gl1tch Events', embeds: [embed], content: '@everyone **НОВЫЙ АНОНС ИВЕНТА!**' })
             });
             return true;
         } catch (error) { return false; }
@@ -446,9 +464,9 @@
             description: `**${eventData.title}**\n\n${eventData.description}`,
             color: 0x10b981,
             fields: [
-                { name: '👥 ПОМОЩНИКИ', value: eventData.assistants || 'Не указаны :(', inline: true },
-                { name: '🎭 АКТЁРЫ', value: eventData.actors || 'Не указаны :(', inline: true },
-                { name: '🏗️ СТРОИТЕЛИ', value: eventData.builders || 'Не указаны :(', inline: true },
+                { name: '👥 ПОМОЩНИКИ', value: eventData.assistants || 'Не указаны', inline: true },
+                { name: '🎭 АКТЁРЫ', value: eventData.actors || 'Не указаны', inline: true },
+                { name: '🏗️ СТРОИТЕЛИ', value: eventData.builders || 'Не указаны', inline: true },
                 { name: '📝 ОТЧЁТ ОТ', value: username, inline: true },
                 { name: '📅 ДАТА ПРОВЕДЕНИЯ', value: currentDate, inline: true }
             ],
@@ -639,31 +657,35 @@
         e.preventDefault();
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
+        
+        // Сначала загружаем свежих пользователей из таблицы
         await loadUsers();
+        
         if (login(username, password)) {
             document.getElementById('loginContainer').style.display = 'none';
             document.getElementById('appContainer').style.display = 'block';
             await loadEventsFromCloud();
             showToast(`Добро пожаловать, ${username}!`);
             
-            // АВТООБНОВЛЕНИЕ КАЖДЫЕ 10 СЕКУНД
+            // АВТООБНОВЛЕНИЕ КАЖДЫЕ 10 СЕКУНД (пароли тоже обновляются!)
             if (usersUpdateInterval) clearInterval(usersUpdateInterval);
-            if (eventsUpdateInterval) clearInterval(eventsUpdateInterval);
             
             usersUpdateInterval = setInterval(async () => {
                 await loadUsers();
-                // Если текущий пользователь был удалён или изменён
+                // Проверяем, существует ли ещё текущий пользователь
                 const currentUserExists = users.find(u => u.id === currentUser.id);
                 if (!currentUserExists) {
-                    showToast('⚠️ Ваш аккаунт был изменён, выполните вход заново');
+                    showToast('⚠️ Ваш аккаунт был удалён, выполните вход заново');
                     setTimeout(() => logout(), 3000);
                 }
             }, 10000);
             
-            eventsUpdateInterval = setInterval(async () => {
+            setInterval(async () => {
                 await loadEventsFromCloud();
             }, 15000);
-        } else alert('Неверный логин или пароль');
+        } else {
+            alert('Неверный логин или пароль');
+        }
     });
     
     function logout() {
@@ -699,8 +721,7 @@
             id,
             document.getElementById('completeAssistants').value,
             document.getElementById('completeActors').value,
-            document.getElementById('completeBuilders').value
-        );
+            document.getElementById('completeBuilders').value        );
         showToast('✅ Ивент проведён, отчёт отправлен в Discord!');
         document.getElementById('completeEventModal').style.display = 'none';
     });
@@ -778,7 +799,7 @@
         loadUsers();
         
         usersUpdateInterval = setInterval(async () => { await loadUsers(); }, 10000);
-        eventsUpdateInterval = setInterval(async () => { await loadEventsFromCloud(); }, 15000);
+        setInterval(async () => { await loadEventsFromCloud(); }, 15000);
     }
 </script>
 
