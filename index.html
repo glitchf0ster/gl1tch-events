@@ -118,7 +118,8 @@
         }
         .btn-yellow:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(234, 179, 8, 0.4); }
         .status-pending { color: #eab308; }
-        .status-completed { color: #10b981; }
+        .status-approved { color: #10b981; }
+        .status-completed { color: #3b82f6; }
     </style>
 </head>
 <body>
@@ -143,7 +144,6 @@
                 <i class="fas fa-sign-in-alt mr-2"></i> Войти
             </button>
         </form>
-        <!-- УДАЛЕНА СТРОКА С ПОДСКАЗКОЙ ЛОГИНОВ -->
     </div>
 </div>
 
@@ -164,8 +164,8 @@
                 <div class="flex items-center space-x-3">
                     <img id="userAvatar" class="avatar" src="https://ui-avatars.com/api/?background=cc0000&color=fff&bold=true&size=40&name=GF" alt="Avatar">
                     <div class="flex-1">
-                        <p id="userName" class="text-white font-medium text-sm">Gl1tchFrost</p>
-                        <p id="userRole" class="text-xs text-gray-400">Администратор</p>
+                        <p id="userName" class="text-white font-medium text-sm"></p>
+                        <p id="userRole" class="text-xs text-gray-400"></p>
                     </div>
                 </div>
             </div>
@@ -175,13 +175,13 @@
                     <i class="fas fa-calendar-alt w-5 text-red-400"></i>
                     <span class="text-gray-300">📋 Ивенты</span>
                 </div>
-                <div class="nav-item px-4 py-3 rounded-lg flex items-center space-x-3" data-tab="stats">
-                    <i class="fas fa-chart-line w-5 text-blue-400"></i>
-                    <span class="text-gray-300">📊 Статистика</span>
-                </div>
                 <div class="nav-item px-4 py-3 rounded-lg flex items-center space-x-3" data-tab="announce">
                     <i class="fas fa-bullhorn w-5 text-green-400"></i>
-                    <span class="text-gray-300">📢 Анонс</span>
+                    <span class="text-gray-300">📢 Создать анонс</span>
+                </div>
+                <div class="nav-item px-4 py-3 rounded-lg flex items-center space-x-3" data-tab="moderation" id="moderationTabBtn" style="display:none;">
+                    <i class="fas fa-shield-alt w-5 text-yellow-400"></i>
+                    <span class="text-gray-300">🛡️ На одобрение</span>
                 </div>
                 <div class="nav-item px-4 py-3 rounded-lg flex items-center space-x-3" data-tab="users">
                     <i class="fas fa-users w-5 text-purple-400"></i>
@@ -199,32 +199,16 @@
     
     <div class="main-content">
         <div class="container mx-auto px-6 py-8">
+            <!-- Ивенты -->
             <div id="eventsTab" class="tab-content">
-                <button id="newEventBtn" class="btn-green px-6 py-3 rounded-xl font-semibold text-white mb-6">+ Быстрый ивент (уже проведён)</button>
                 <div id="eventsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
             </div>
 
-            <div id="statsTab" class="tab-content" style="display:none;">
-                <div class="card p-6 bg-white/5 rounded-xl">
-                    <h3 class="text-white font-semibold mb-4 text-xl">📈 Статистика</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                        <div class="text-center p-4 bg-white/5 rounded-xl">
-                            <p class="text-gray-400">Всего ивентов</p>
-                            <p class="text-4xl font-bold text-white" id="statTotal">0</p>
-                        </div>
-                        <div class="text-center p-4 bg-white/5 rounded-xl">
-                            <p class="text-gray-400">Проведено</p>
-                            <p class="text-4xl font-bold text-green-400" id="statCompleted">0</p>
-                        </div>
-                    </div>
-                    <canvas id="monthlyChart" height="200"></canvas>
-                </div>
-            </div>
-
+            <!-- Создать анонс -->
             <div id="announceTab" class="tab-content" style="display:none;">
                 <div class="card p-6 bg-white/5 rounded-xl">
                     <h3 class="text-xl font-bold text-white mb-4">📢 Создать анонс ивента</h3>
-                    <p class="text-gray-400 text-sm mb-4">После анонса ивент появится в списке</p>
+                    <p class="text-gray-400 text-sm mb-4">Анонс будет отправлен администраторам на одобрение</p>
                     <form id="announceForm">
                         <input type="text" id="announceTitle" placeholder="📌 Название ивента" class="input-dark mb-3" required>
                         <textarea id="announceDescription" placeholder="📝 Описание ивента" rows="3" class="input-dark mb-3" required></textarea>
@@ -247,12 +231,22 @@
                         <textarea id="announceExtra" placeholder="➕ Дополнительная информация (дата, время, требования и т.д.)" rows="2" class="input-dark mb-4"></textarea>
                         
                         <button type="submit" class="btn-blue w-full py-3 rounded-xl font-semibold text-white">
-                            <i class="fas fa-paper-plane mr-2"></i> Создать анонс
+                            <i class="fas fa-paper-plane mr-2"></i> Отправить на одобрение
                         </button>
                     </form>
                 </div>
             </div>
 
+            <!-- Модерация (только для админов) -->
+            <div id="moderationTab" class="tab-content" style="display:none;">
+                <h3 class="text-xl font-bold text-white mb-4">🛡️ Анонсы на одобрение</h3>
+                <div id="pendingAnnouncesList" class="space-y-4"></div>
+                <hr class="border-red-900/50 my-6">
+                <h3 class="text-xl font-bold text-white mb-4">⏳ Ивенты на проведение</h3>
+                <div id="pendingEventsList" class="space-y-4"></div>
+            </div>
+
+            <!-- Пользователи -->
             <div id="usersTab" class="tab-content" style="display:none;">
                 <h3 class="text-xl font-bold text-white mb-4">👥 Пользователи</h3>
                 <div id="usersList" class="space-y-3"></div>
@@ -261,24 +255,7 @@
     </div>
 </div>
 
-<!-- МОДАЛЬНЫЕ ОКНА -->
-<div id="quickEventModal" class="modal fixed inset-0 flex items-center justify-center z-50" style="display:none;">
-    <div class="modal-content p-6 w-full max-w-md m-4">
-        <h3 class="text-xl font-bold text-white mb-4">📋 Быстрый ивент (уже проведён)</h3>
-        <form id="quickEventForm">
-            <input type="text" id="quickTitle" placeholder="Название" class="input-dark mb-3" required>
-            <textarea id="quickDescription" placeholder="Описание" rows="4" class="input-dark mb-3" required></textarea>
-            <input type="text" id="quickAssistants" placeholder="Помощники (через запятую)" class="input-dark mb-3">
-            <input type="text" id="quickActors" placeholder="Актёры (через запятую)" class="input-dark mb-3">
-            <input type="text" id="quickBuilders" placeholder="Строители (через запятую)" class="input-dark mb-4">
-            <div class="flex justify-end gap-3">
-                <button type="button" id="closeQuickModalBtn" class="px-4 py-2 bg-gray-600 rounded-xl text-white">Отмена</button>
-                <button type="submit" class="btn-green px-4 py-2 rounded-xl text-white">Сохранить</button>
-            </div>
-        </form>
-    </div>
-</div>
-
+<!-- МОДАЛЬНОЕ ОКНО ПРОВЕДЕНИЯ ИВЕНТА -->
 <div id="completeEventModal" class="modal fixed inset-0 flex items-center justify-center z-50" style="display:none;">
     <div class="modal-content p-6 w-full max-w-md m-4">
         <h3 class="text-xl font-bold text-white mb-4">✅ Провести ивент</h3>
@@ -298,30 +275,50 @@
 </div>
 
 <script>
-    // ============ ФИКСИРОВАННЫЕ ПОЛЬЗОВАТЕЛИ ============
+    // ============ ПОЛЬЗОВАТЕЛИ (без модератора) ============
     const users = [
         { id: 1, username: 'Gl1tchFrost', password: 'kost@1975', role: 'admin', avatar: null },
         { id: 2, username: 'T1Ran', password: 'q4627hhn64', role: 'admin', avatar: null },
-        { id: 3, username: 'Pashock', password: 'j28hf39', role: 'user', avatar: null },
-        { id: 4, username: 'Nezny', password: '2fcn92145hg', role: 'user', avatar: null }
+        { id: 2, username: 'Nezny', password: '2fcn92145hg', role: 'user', avatar: null },
+        { id: 2, username: 'Pashock', password: 'j28hf39', role: 'user', avatar: null }
     ];
     
-    const EVENTS_SHEET_API = 'https://script.google.com/macros/s/AKfycbybP2YpSFVED9nho8oN2jHYWagaO0ytvnEBTMF0y37Vn7pqHqC1zNpXRbpw77nkxF4KzA/exec';
     const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1507778037197050057/wnyKFFsvAOKtdPFghv8mj2asH_xQOoFXsHJyemo53cj6jxWYRJccAZmVQuTdoiqiXDCb';
     const ANNOUNCE_WEBHOOK_URL = 'https://discord.com/api/webhooks/1507826979544633424/LwuAJ79T2NZoGyV08n45xwOUWfHB4ObLLZ98hLM-N2TOEaINRJV2OCSaIciQLJo1LCD4';
     
     let currentUser = null;
     let events = [];
-    let monthlyChart = null;
+    let pendingAnnounces = [];
+    let pendingEvents = [];
     
-    // ============ ПОЛЬЗОВАТЕЛИ ============
+    function loadData() {
+        const savedEvents = localStorage.getItem('events');
+        const savedPendingAnnounces = localStorage.getItem('pendingAnnounces');
+        const savedPendingEvents = localStorage.getItem('pendingEvents');
+        
+        if (savedEvents) events = JSON.parse(savedEvents);
+        if (savedPendingAnnounces) pendingAnnounces = JSON.parse(savedPendingAnnounces);
+        if (savedPendingEvents) pendingEvents = JSON.parse(savedPendingEvents);
+        
+        renderEvents();
+        renderUsersList();
+        if (currentUser?.role === 'admin') {
+            renderModeration();
+        }
+    }
+    
+    function saveAllData() {
+        localStorage.setItem('events', JSON.stringify(events));
+        localStorage.setItem('pendingAnnounces', JSON.stringify(pendingAnnounces));
+        localStorage.setItem('pendingEvents', JSON.stringify(pendingEvents));
+    }
+    
     function renderUsersList() {
         const container = document.getElementById('usersList');
         if (!container) return;
         
         const roleLabels = {
             'admin': '<span class="text-red-400"><i class="fas fa-crown"></i> Администратор</span>',
-            'manager': '<span class="text-yellow-400"><i class="fas fa-shield-alt"></i> Модератор</span>',
             'user': '<span class="text-blue-400"><i class="fas fa-user"></i> Пользователь</span>'
         };
         
@@ -338,54 +335,70 @@
         `).join('');
     }
     
-    // ============ АВТОРИЗАЦИЯ ============
-    function login(username, password) {
-        const user = users.find(u => u.username === username && u.password === password);
-        if (user) {
-            currentUser = user;
-            localStorage.setItem('currentUser', JSON.stringify(currentUser));
-            document.getElementById('userName').innerHTML = currentUser.username;
-            document.getElementById('userRole').innerHTML = currentUser.role === 'admin' ? '👑 Администратор' : '🛡️ Модератор';
-            return true;
-        }
-        return false;
-    }
-    
-    // ============ ИВЕНТЫ ============
-    async function loadEvents() {
-        const saved = localStorage.getItem('events');
-        if (saved) {
-            events = JSON.parse(saved);
-        }
-        renderEvents();
-        renderStats();
-    }
-    
-    function saveEvents() {
-        localStorage.setItem('events', JSON.stringify(events));
-        renderEvents();
-        renderStats();
-    }
-    
-    async function sendAnnouncement(data) {
+    async function sendAnnouncementToAdmin(data, author) {
         const embed = {
-            title: '📢 АНОНС ИВЕНТА',
+            title: '📢 НОВЫЙ АНОНС НА ОДОБРЕНИЕ',
             description: `**${data.title}**\n\n${data.description}`,
-            color: 0x3b82f6,
+            color: 0xeab308,
+            fields: [
+                { name: '👥 ТРЕБУЕТСЯ ПОМОЩНИКОВ', value: `${data.helpers} человек`, inline: true },
+                { name: '🎭 ТРЕБУЕТСЯ АКТЁРОВ', value: `${data.actors} человек`, inline: true },
+                { name: '🏗️ ТРЕБУЕТСЯ СТРОИТЕЛЕЙ', value: `${data.builders} человек`, inline: true },
+                { name: '📝 АВТОР', value: author, inline: true }
+            ],
+            footer: { text: 'Требуется одобрение администратора' },
+            timestamp: new Date().toISOString()
+        };
+        if (data.extra) embed.fields.push({ name: '📝 ДОПОЛНИТЕЛЬНО', value: data.extra, inline: false });
+        
+        try {
+            await fetch(ANNOUNCE_WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: 'Gl1tch Events', embeds: [embed], content: '@here **НОВЫЙ АНОНС НА ОДОБРЕНИЕ!**' })
+            });
+            return true;
+        } catch (error) { return false; }
+    }
+    
+    async function sendApprovedAnnouncement(data) {
+        const embed = {
+            title: '📢 АНОНС ИВЕНТА (ОДОБРЕНО)',
+            description: `**${data.title}**\n\n${data.description}`,
+            color: 0x10b981,
             fields: [
                 { name: '👥 ТРЕБУЕТСЯ ПОМОЩНИКОВ', value: `${data.helpers} человек`, inline: true },
                 { name: '🎭 ТРЕБУЕТСЯ АКТЁРОВ', value: `${data.actors} человек`, inline: true },
                 { name: '🏗️ ТРЕБУЕТСЯ СТРОИТЕЛЕЙ', value: `${data.builders} человек`, inline: true }
             ],
-            footer: { text: 'Gl1tch Events' },
+            footer: { text: 'Ивент одобрен и добавлен в список на проведение' },
             timestamp: new Date().toISOString()
         };
         if (data.extra) embed.fields.push({ name: '📝 ДОПОЛНИТЕЛЬНО', value: data.extra, inline: false });
+        
         try {
-            await fetch(ANNOUNCE_WEBHOOK_URL, {
+            await fetch(DISCORD_WEBHOOK_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: 'Gl1tch Events', embeds: [embed], content: ' **НОВЫЙ АНОНС ИВЕНТА!**' })
+                body: JSON.stringify({ username: 'Gl1tch Events', embeds: [embed], content: '@everyone **НОВЫЙ АНОНС ИВЕНТА!**' })
+            });
+            return true;
+        } catch (error) { return false; }
+    }
+    
+    async function sendRejectionAnnouncement(title, reason) {
+        const embed = {
+            title: '❌ АНОНС ОТКЛОНЕН',
+            description: `**${title}**\n\nПричина: ${reason}`,
+            color: 0xef4444,
+            footer: { text: 'Анонс отклонён администратором' },
+            timestamp: new Date().toISOString()
+        };
+        try {
+            await fetch(DISCORD_WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: 'Gl1tch Events', embeds: [embed], content: '❌ **АНОНС ОТКЛОНЕН!**' })
             });
             return true;
         } catch (error) { return false; }
@@ -396,7 +409,7 @@
         const embed = {
             title: '📋 ОТЧЁТ О ПРОВЕДЕННОМ ИВЕНТЕ',
             description: `**${eventData.title}**\n\n${eventData.description}`,
-            color: 0x10b981,
+            color: 0x3b82f6,
             fields: [
                 { name: '👥 ПОМОЩНИКИ', value: eventData.assistants || 'Не указаны', inline: true },
                 { name: '🎭 АКТЁРЫ', value: eventData.actors || 'Не указаны', inline: true },
@@ -417,102 +430,191 @@
         } catch (error) { return false; }
     }
     
-    async function createPendingEvent(title, description) {
-        const newEvent = {
+    async function createAnnounce(title, description, helpers, actors, builders, extra) {
+        const newAnnounce = {
             id: Date.now(),
-            title, description,
-            assistants: '', actors: '', builders: '',
+            title, description, helpers, actors, builders, extra,
             created_at: new Date().toISOString(),
             created_by: currentUser.username,
             status: 'pending'
         };
-        events.unshift(newEvent);
-        saveEvents();
-        return newEvent;
+        pendingAnnounces.push(newAnnounce);
+        saveAllData();
+        await sendAnnouncementToAdmin({ title, description, helpers, actors, builders, extra }, currentUser.username);
+        return newAnnounce;
     }
     
-    async function createCompletedEvent(title, description, assistants, actors, builders) {
-        const newEvent = {
-            id: Date.now(),
-            title, description,
-            assistants: assistants || '', actors: actors || '', builders: builders || '',
-            created_at: new Date().toISOString(),
-            created_by: currentUser.username,
-            status: 'completed',
-            completed_at: new Date().toISOString()
-        };
-        events.unshift(newEvent);
-        saveEvents();
-        await sendReport(newEvent, currentUser.username);
-        return newEvent;
+    async function approveAnnounce(id) {
+        const announce = pendingAnnounces.find(a => a.id == id);
+        if (announce) {
+            pendingAnnounces = pendingAnnounces.filter(a => a.id != id);
+            const newEvent = {
+                id: Date.now(),
+                title: announce.title,
+                description: announce.description,
+                assistants: '',
+                actors: '',
+                builders: '',
+                helpers_needed: { helpers: announce.helpers, actors: announce.actors, builders: announce.builders },
+                extra: announce.extra,
+                created_at: announce.created_at,
+                created_by: announce.created_by,
+                approved_by: currentUser.username,
+                status: 'approved'
+            };
+            pendingEvents.push(newEvent);
+            saveAllData();
+            await sendApprovedAnnouncement({
+                title: announce.title,
+                description: announce.description,
+                helpers: announce.helpers,
+                actors: announce.actors,
+                builders: announce.builders,
+                extra: announce.extra
+            });
+            renderModeration();
+            return true;
+        }
+        return false;
+    }
+    
+    async function rejectAnnounce(id, reason) {
+        const announce = pendingAnnounces.find(a => a.id == id);
+        if (announce) {
+            pendingAnnounces = pendingAnnounces.filter(a => a.id != id);
+            saveAllData();
+            await sendRejectionAnnouncement(announce.title, reason);
+            renderModeration();
+            return true;
+        }
+        return false;
     }
     
     async function completeEvent(id, assistants, actors, builders) {
-        const event = events.find(e => e.id == id);
+        const event = pendingEvents.find(e => e.id == id);
         if (event) {
-            event.status = 'completed';
-            event.assistants = assistants || '';
-            event.actors = actors || '';
-            event.builders = builders || '';
-            event.completed_at = new Date().toISOString();
-            saveEvents();
-            await sendReport(event, currentUser.username);
-            return event;
+            pendingEvents = pendingEvents.filter(e => e.id != id);
+            const completedEvent = {
+                ...event,
+                assistants: assistants || '',
+                actors: actors || '',
+                builders: builders || '',
+                completed_at: new Date().toISOString(),
+                completed_by: currentUser.username,
+                status: 'completed'
+            };
+            events.unshift(completedEvent);
+            saveAllData();
+            await sendReport(completedEvent, currentUser.username);
+            renderEvents();
+            renderModeration();
+            return true;
         }
-        return null;
-    }
-    
-    async function deleteEvent(id) {
-        events = events.filter(e => e.id != id);
-        saveEvents();
-        showToast('🗑️ Ивент удалён');
+        return false;
     }
     
     function renderEvents() {
         const container = document.getElementById('eventsList');
         if (!container) return;
-        if (events.length === 0) {
-            container.innerHTML = '<div class="col-span-full text-center py-12 text-gray-400">Нет ивентов. Создайте первый!</div>';
+        const completedEvents = events.filter(e => e.status === 'completed');
+        if (completedEvents.length === 0) {
+            container.innerHTML = '<div class="col-span-full text-center py-12 text-gray-400">Нет проведённых ивентов</div>';
             return;
         }
-        container.innerHTML = events.map(e => `
+        container.innerHTML = completedEvents.map(e => `
             <div class="card p-5 bg-white/5 rounded-xl animate-fadeInUp">
                 <div class="flex justify-between items-start mb-3">
                     <div class="flex-1">
                         <h3 class="text-xl font-bold text-white">${escapeHtml(e.title)}</h3>
-                        <div class="text-sm mt-1">${e.status === 'pending' ? '<span class="status-pending"><i class="fas fa-clock"></i> ⏳ Ожидает проведения</span>' : '<span class="status-completed"><i class="fas fa-check-circle"></i> ✅ Проведён</span>'}</div>
+                        <div class="text-sm mt-1"><span class="status-completed"><i class="fas fa-check-circle"></i> ✅ Проведён</span></div>
                     </div>
                     ${currentUser?.role === 'admin' ? `
-                        <div class="flex gap-2">
-                            ${e.status === 'pending' ? `<button onclick="openCompleteModal(${e.id})" class="btn-yellow px-3 py-1 rounded-lg text-white text-sm"><i class="fas fa-play"></i> Провести</button>` : ''}
-                            <button onclick="deleteEventHandler(${e.id})" class="text-red-500 hover:text-red-400"><i class="fas fa-trash"></i></button>
-                        </div>
+                        <button onclick="deleteEvent(${e.id})" class="text-red-500 hover:text-red-400"><i class="fas fa-trash"></i></button>
                     ` : ''}
                 </div>
                 <p class="text-gray-300 mb-3">${escapeHtml((e.description || '').substring(0, 100))}${(e.description || '').length > 100 ? '...' : ''}</p>
                 <div class="flex justify-between items-center text-sm text-gray-500">
-                    <span><i class="far fa-calendar-alt mr-1"></i>${new Date(e.created_at).toLocaleDateString()}</span>
+                    <span><i class="far fa-calendar-alt mr-1"></i>${new Date(e.completed_at).toLocaleDateString()}</span>
                     <button onclick="showDetail(${e.id})" class="text-red-400 hover:underline">Подробнее →</button>
                 </div>
             </div>
         `).join('');
     }
     
-    function renderStats() {
-        document.getElementById('statTotal').innerText = events.length;
-        document.getElementById('statCompleted').innerText = events.filter(e => e.status === 'completed').length;
-        const months = {};
-        events.forEach(e => { const month = new Date(e.created_at).toLocaleString('ru-RU', { year: 'numeric', month: 'long' }); months[month] = (months[month] || 0) + 1; });
-        const labels = Object.keys(months).slice(0, 6);
-        const data = labels.map(l => months[l]);
-        if (monthlyChart) monthlyChart.destroy();
-        const ctx = document.getElementById('monthlyChart');
-        if (ctx) {
-            monthlyChart = new Chart(ctx, {
-                type: 'line',
-                data: { labels, datasets: [{ label: 'Ивенты', data, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.3 }] },
-                options: { responsive: true, maintainAspectRatio: true }
-            });
+    function renderModeration() {
+        const pendingContainer = document.getElementById('pendingAnnouncesList');
+        if (pendingContainer) {
+            if (pendingAnnounces.length === 0) {
+                pendingContainer.innerHTML = '<div class="text-center py-8 text-gray-400">Нет анонсов на одобрение</div>';
+            } else {
+                pendingContainer.innerHTML = pendingAnnounces.map(a => `
+                    <div class="card p-4 bg-white/5 rounded-xl">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <h3 class="text-xl font-bold text-white">${escapeHtml(a.title)}</h3>
+                                <p class="text-gray-400 text-sm mt-1">Автор: ${escapeHtml(a.created_by)} | ${new Date(a.created_at).toLocaleString()}</p>
+                                <p class="text-gray-300 mt-2">${escapeHtml((a.description || '').substring(0, 150))}${(a.description || '').length > 150 ? '...' : ''}</p>
+                                <div class="flex gap-4 mt-2 text-sm text-gray-400">
+                                    <span>👥 Помощников: ${a.helpers}</span>
+                                    <span>🎭 Актёров: ${a.actors}</span>
+                                    <span>🏗️ Строителей: ${a.builders}</span>
+                                </div>
+                                ${a.extra ? `<p class="text-gray-500 text-sm mt-2">➕ ${escapeHtml(a.extra)}</p>` : ''}
+                            </div>
+                            <div class="flex gap-2 ml-4">
+                                <button onclick="approve(${a.id})" class="btn-green px-4 py-2 rounded-lg text-white text-sm"><i class="fas fa-check"></i> Одобрить</button>
+                                <button onclick="openRejectModal(${a.id}, '${escapeHtml(a.title)}')" class="btn-red px-4 py-2 rounded-lg text-white text-sm"><i class="fas fa-times"></i> Отклонить</button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+        
+        const pendingEventsContainer = document.getElementById('pendingEventsList');
+        if (pendingEventsContainer) {
+            if (pendingEvents.length === 0) {
+                pendingEventsContainer.innerHTML = '<div class="text-center py-8 text-gray-400">Нет ивентов на проведение</div>';
+            } else {
+                pendingEventsContainer.innerHTML = pendingEvents.map(e => `
+                    <div class="card p-4 bg-white/5 rounded-xl">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <h3 class="text-xl font-bold text-white">${escapeHtml(e.title)}</h3>
+                                <p class="text-gray-400 text-sm mt-1">Создал: ${escapeHtml(e.created_by)} | ${new Date(e.created_at).toLocaleString()}</p>
+                                <p class="text-gray-300 mt-2">${escapeHtml((e.description || '').substring(0, 150))}${(e.description || '').length > 150 ? '...' : ''}</p>
+                                <div class="flex gap-4 mt-2 text-sm text-gray-400">
+                                    <span>👥 Нужно помощников: ${e.helpers_needed.helpers}</span>
+                                    <span>🎭 Нужно актёров: ${e.helpers_needed.actors}</span>
+                                    <span>🏗️ Нужно строителей: ${e.helpers_needed.builders}</span>
+                                </div>
+                            </div>
+                            <div class="flex gap-2 ml-4">
+                                <button onclick="openCompleteModal(${e.id})" class="btn-yellow px-4 py-2 rounded-lg text-white text-sm"><i class="fas fa-play"></i> Провести</button>
+                                <button onclick="deletePendingEvent(${e.id})" class="text-red-500 hover:text-red-400"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+    }
+    
+    function deleteEvent(id) {
+        if (confirm('Удалить ивент?')) {
+            events = events.filter(e => e.id != id);
+            saveAllData();
+            renderEvents();
+            showToast('🗑️ Ивент удалён');
+        }
+    }
+    
+    function deletePendingEvent(id) {
+        if (confirm('Удалить ивент из списка на проведение?')) {
+            pendingEvents = pendingEvents.filter(e => e.id != id);
+            saveAllData();
+            renderModeration();
+            showToast('🗑️ Ивент удалён');
         }
     }
     
@@ -524,9 +626,21 @@
         setTimeout(() => toast.remove(), 3000);
     }
     
-    // ============ ОБРАБОТЧИКИ ============
+    window.approve = async (id) => {
+        await approveAnnounce(id);
+        showToast('✅ Анонс одобрен');
+    };
+    
+    window.openRejectModal = (id, title) => {
+        const reason = prompt('Укажите причину отклонения:', '');
+        if (reason) {
+            rejectAnnounce(id, reason);
+            showToast('❌ Анонс отклонён');
+        }
+    };
+    
     window.openCompleteModal = (id) => {
-        const event = events.find(e => e.id == id);
+        const event = pendingEvents.find(e => e.id == id);
         document.getElementById('completeEventId').value = event.id;
         document.getElementById('completeTitle').value = event.title;
         document.getElementById('completeDescription').value = event.description;
@@ -535,8 +649,6 @@
         document.getElementById('completeBuilders').value = '';
         document.getElementById('completeEventModal').style.display = 'flex';
     };
-    
-    window.deleteEventHandler = async (id) => { if (confirm('🗑️ Удалить ивент?')) await deleteEvent(id); };
     
     window.showDetail = (id) => {
         const event = events.find(e => e.id == id);
@@ -549,15 +661,13 @@
                     <h3 class="text-2xl font-bold text-white">${escapeHtml(event.title)}</h3>
                     <button onclick="this.closest('.modal').remove()" class="text-gray-400 hover:text-white text-2xl">&times;</button>
                 </div>
-                <div class="mb-4">${event.status === 'pending' ? '<span class="status-pending"><i class="fas fa-clock"></i> ⏳ Ожидает проведения</span>' : '<span class="status-completed"><i class="fas fa-check-circle"></i> ✅ Проведён</span>'}</div>
                 <p class="text-gray-300 mb-6">${escapeHtml(event.description)}</p>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="bg-red-900/30 p-4 rounded-xl"><b class="text-red-400">Помощники:</b><br>${escapeHtml(event.assistants) || 'Не указаны'}</div>
                     <div class="bg-red-900/30 p-4 rounded-xl"><b class="text-red-400">Актёры:</b><br>${escapeHtml(event.actors) || 'Не указаны'}</div>
                     <div class="bg-red-900/30 p-4 rounded-xl"><b class="text-red-400">Строители:</b><br>${escapeHtml(event.builders) || 'Не указаны'}</div>
                 </div>
-                <div class="mt-4 text-sm text-gray-500">Создан: ${new Date(event.created_at).toLocaleString()} | Автор: ${escapeHtml(event.created_by)}</div>
-                ${event.completed_at ? `<div class="mt-1 text-sm text-green-400">Проведён: ${new Date(event.completed_at).toLocaleString()}</div>` : ''}
+                <div class="mt-4 text-sm text-gray-500">Проведён: ${new Date(event.completed_at).toLocaleString()} | Отчёт: ${escapeHtml(event.completed_by)}</div>
             </div>
         `;
         document.body.appendChild(modal);
@@ -575,6 +685,24 @@
         });
     });
     
+    function login(username, password) {
+        const user = users.find(u => u.username === username && u.password === password);
+        if (user) {
+            currentUser = user;
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            document.getElementById('userName').innerHTML = currentUser.username;
+            document.getElementById('userRole').innerHTML = currentUser.role === 'admin' ? '👑 Администратор' : '👤 Пользователь';
+            
+            if (currentUser.role === 'admin') {
+                document.getElementById('moderationTabBtn').style.display = 'flex';
+            } else {
+                document.getElementById('moderationTabBtn').style.display = 'none';
+            }
+            return true;
+        }
+        return false;
+    }
+    
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const username = document.getElementById('username').value;
@@ -583,51 +711,17 @@
         if (login(username, password)) {
             document.getElementById('loginContainer').style.display = 'none';
             document.getElementById('appContainer').style.display = 'block';
-            renderUsersList();
-            await loadEvents();
+            loadData();
             showToast(`Добро пожаловать, ${username}!`);
         } else {
             alert('Неверный логин или пароль');
         }
     });
     
-    function logout() {
+    document.getElementById('logoutBtn').addEventListener('click', () => {
         currentUser = null;
         localStorage.removeItem('currentUser');
         location.reload();
-    }
-    
-    document.getElementById('logoutBtn').addEventListener('click', logout);
-    
-    document.getElementById('newEventBtn').onclick = () => document.getElementById('quickEventModal').style.display = 'flex';
-    document.getElementById('closeQuickModalBtn').onclick = () => document.getElementById('quickEventModal').style.display = 'none';
-    document.getElementById('closeCompleteModalBtn').onclick = () => document.getElementById('completeEventModal').style.display = 'none';
-    
-    document.getElementById('quickEventForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        await createCompletedEvent(
-            document.getElementById('quickTitle').value,
-            document.getElementById('quickDescription').value,
-            document.getElementById('quickAssistants').value,
-            document.getElementById('quickActors').value,
-            document.getElementById('quickBuilders').value
-        );
-        showToast('✅ Ивент создан и отчёт отправлен в Discord!');
-        document.getElementById('quickEventModal').style.display = 'none';
-        document.getElementById('quickEventForm').reset();
-    });
-    
-    document.getElementById('completeEventForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const id = parseInt(document.getElementById('completeEventId').value);
-        await completeEvent(
-            id,
-            document.getElementById('completeAssistants').value,
-            document.getElementById('completeActors').value,
-            document.getElementById('completeBuilders').value
-        );
-        showToast('✅ Ивент проведён, отчёт отправлен в Discord!');
-        document.getElementById('completeEventModal').style.display = 'none';
     });
     
     document.getElementById('announceForm').addEventListener('submit', async (e) => {
@@ -638,13 +732,26 @@
         const actors = document.getElementById('announceActors').value;
         const builders = document.getElementById('announceBuilders').value;
         const extra = document.getElementById('announceExtra').value;
-        await sendAnnouncement({ title, description, helpers, actors, builders, extra });
-        await createPendingEvent(title, description);
-        showToast('✅ Анонс опубликован и ивент добавлен в список!');
+        
+        await createAnnounce(title, description, helpers, actors, builders, extra);
+        showToast('✅ Анонс отправлен на одобрение администраторам!');
         document.getElementById('announceForm').reset();
     });
     
-    // АНИМАЦИЯ ТОЧЕК
+    document.getElementById('completeEventForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = parseInt(document.getElementById('completeEventId').value);
+        const assistants = document.getElementById('completeAssistants').value;
+        const actors = document.getElementById('completeActors').value;
+        const builders = document.getElementById('completeBuilders').value;
+        
+        await completeEvent(id, assistants, actors, builders);
+        showToast('✅ Ивент проведён, отчёт отправлен в Discord!');
+        document.getElementById('completeEventModal').style.display = 'none';
+    });
+    
+    document.getElementById('closeCompleteModalBtn').onclick = () => document.getElementById('completeEventModal').style.display = 'none';
+    
     const blobsContainer = document.getElementById('blobsContainer');
     for (let i = 0; i < 12; i++) {
         const blob = document.createElement('div');
@@ -698,9 +805,12 @@
         document.getElementById('loginContainer').style.display = 'none';
         document.getElementById('appContainer').style.display = 'block';
         document.getElementById('userName').innerHTML = currentUser.username;
-        document.getElementById('userRole').innerHTML = currentUser.role === 'admin' ? '👑 Администратор' : '🛡️ Модератор';
-        renderUsersList();
-        loadEvents();
+        document.getElementById('userRole').innerHTML = currentUser.role === 'admin' ? '👑 Администратор' : '👤 Пользователь';
+        
+        if (currentUser.role === 'admin') {
+            document.getElementById('moderationTabBtn').style.display = 'flex';
+        }
+        loadData();
     }
 </script>
 
