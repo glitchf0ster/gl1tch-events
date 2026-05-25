@@ -9,21 +9,11 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * { font-family: 'Inter', sans-serif; }
-        body {
-            background: radial-gradient(ellipse at center, #0a0a0a 0%, #030303 100%);
-            min-height: 100vh;
-        }
+        body { background: radial-gradient(ellipse at center, #0a0a0a 0%, #030303 100%); min-height: 100vh; }
         .sidebar {
-            position: fixed;
-            left: 0;
-            top: 0;
-            width: 280px;
-            height: 100vh;
-            background: rgba(10, 10, 15, 0.95);
-            backdrop-filter: blur(10px);
-            border-right: 1px solid rgba(255, 60, 60, 0.3);
-            z-index: 50;
-            overflow-y: auto;
+            position: fixed; left: 0; top: 0; width: 280px; height: 100vh;
+            background: rgba(10, 10, 15, 0.95); backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 60, 60, 0.3); z-index: 50; overflow-y: auto;
         }
         .sidebar::-webkit-scrollbar { width: 4px; }
         .sidebar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); }
@@ -37,85 +27,22 @@
         .user-card:hover { background: rgba(255, 255, 255, 0.1); transform: translateX(5px); }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fadeInUp { animation: fadeInUp 0.4s ease-out forwards; }
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #10b981;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 8px;
-            z-index: 1000;
-            animation: slideIn 0.3s ease-out;
-        }
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        .blob {
-            position: fixed;
-            background: radial-gradient(circle, rgba(255, 30, 30, 0.15) 0%, rgba(180, 0, 0, 0.08) 50%, transparent 70%);
-            border-radius: 50%;
-            filter: blur(50px);
-            pointer-events: none;
-            z-index: 0;
-            animation: floatBlob 25s ease-in-out infinite alternate;
-        }
-        @keyframes floatBlob {
-            0% { transform: translate(0, 0) scale(1); opacity: 0.4; }
-            50% { transform: translate(5%, 3%) scale(1.2); opacity: 0.6; }
-            100% { transform: translate(-3%, 5%) scale(0.9); opacity: 0.3; }
-        }
-        .red-dot {
-            position: fixed;
-            background: radial-gradient(circle, #ff4444 0%, #ff0000 40%, #990000 80%);
-            border-radius: 50%;
-            box-shadow: 0 0 12px #ff0000, 0 0 25px rgba(255, 0, 0, 0.5);
-            pointer-events: none;
-            z-index: 1;
-        }
-        .modal {
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(5px);
-            z-index: 100;
-        }
-        .modal-content {
-            background: rgba(20, 20, 30, 0.95);
-            border: 1px solid #cc0000;
-            border-radius: 1rem;
-        }
-        .input-dark {
-            background: rgba(0, 0, 0, 0.65);
-            border: 1px solid rgba(255, 60, 60, 0.3);
-            color: white;
-            border-radius: 0.75rem;
-            padding: 0.75rem;
-            width: 100%;
-        }
-        .input-dark:focus {
-            border-color: #cc0000;
-            outline: none;
-            box-shadow: 0 0 10px rgba(204, 0, 0, 0.3);
-        }
-        .btn-red {
-            background: linear-gradient(135deg, #cc0000 0%, #8b0000 100%);
-            transition: all 0.3s ease;
-        }
+        .toast { position: fixed; bottom: 20px; right: 20px; background: #10b981; color: white; padding: 12px 24px; border-radius: 8px; z-index: 1000; animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .blob { position: fixed; background: radial-gradient(circle, rgba(255, 30, 30, 0.15) 0%, rgba(180, 0, 0, 0.08) 50%, transparent 70%); border-radius: 50%; filter: blur(50px); pointer-events: none; z-index: 0; animation: floatBlob 25s ease-in-out infinite alternate; }
+        @keyframes floatBlob { 0% { transform: translate(0, 0) scale(1); opacity: 0.4; } 50% { transform: translate(5%, 3%) scale(1.2); opacity: 0.6; } 100% { transform: translate(-3%, 5%) scale(0.9); opacity: 0.3; } }
+        .red-dot { position: fixed; background: radial-gradient(circle, #ff4444 0%, #ff0000 40%, #990000 80%); border-radius: 50%; box-shadow: 0 0 12px #ff0000, 0 0 25px rgba(255, 0, 0, 0.5); pointer-events: none; z-index: 1; }
+        .modal { background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px); z-index: 100; }
+        .modal-content { background: rgba(20, 20, 30, 0.95); border: 1px solid #cc0000; border-radius: 1rem; }
+        .input-dark { background: rgba(0, 0, 0, 0.65); border: 1px solid rgba(255, 60, 60, 0.3); color: white; border-radius: 0.75rem; padding: 0.75rem; width: 100%; }
+        .input-dark:focus { border-color: #cc0000; outline: none; box-shadow: 0 0 10px rgba(204, 0, 0, 0.3); }
+        .btn-red { background: linear-gradient(135deg, #cc0000 0%, #8b0000 100%); transition: all 0.3s ease; }
         .btn-red:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(255, 0, 0, 0.5); }
-        .btn-green {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            transition: all 0.3s ease;
-        }
+        .btn-green { background: linear-gradient(135deg, #10b981 0%, #059669 100%); transition: all 0.3s ease; }
         .btn-green:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4); }
-        .btn-blue {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-            transition: all 0.3s ease;
-        }
+        .btn-blue { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); transition: all 0.3s ease; }
         .btn-blue:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4); }
-        .btn-yellow {
-            background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
-            transition: all 0.3s ease;
-        }
+        .btn-yellow { background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%); transition: all 0.3s ease; }
         .btn-yellow:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(234, 179, 8, 0.4); }
         .status-pending { color: #eab308; }
         .status-approved { color: #10b981; }
@@ -155,9 +82,7 @@
                 <div class="w-10 h-10 bg-gradient-to-br from-red-600 to-red-900 rounded-xl flex items-center justify-center">
                     <i class="fas fa-table-list text-white text-xl"></i>
                 </div>
-                <div>
-                    <h1 class="text-lg font-bold text-white">Gl1tch Events</h1>
-                </div>
+                <div><h1 class="text-lg font-bold text-white">Gl1tch Events</h1></div>
             </div>
             
             <div class="mb-6 p-3 bg-white/5 rounded-xl">
@@ -172,20 +97,16 @@
             
             <div class="space-y-1">
                 <div class="nav-item px-4 py-3 rounded-lg flex items-center space-x-3" data-tab="events">
-                    <i class="fas fa-calendar-alt w-5 text-red-400"></i>
-                    <span class="text-gray-300">📋 Ивенты</span>
+                    <i class="fas fa-calendar-alt w-5 text-red-400"></i><span class="text-gray-300">📋 Ивенты</span>
                 </div>
                 <div class="nav-item px-4 py-3 rounded-lg flex items-center space-x-3" data-tab="announce">
-                    <i class="fas fa-bullhorn w-5 text-green-400"></i>
-                    <span class="text-gray-300">📢 Создать анонс</span>
+                    <i class="fas fa-bullhorn w-5 text-green-400"></i><span class="text-gray-300">📢 Создать анонс</span>
                 </div>
                 <div class="nav-item px-4 py-3 rounded-lg flex items-center space-x-3" data-tab="moderation" id="moderationTabBtn" style="display:none;">
-                    <i class="fas fa-shield-alt w-5 text-yellow-400"></i>
-                    <span class="text-gray-300">🛡️ На одобрение</span>
+                    <i class="fas fa-shield-alt w-5 text-yellow-400"></i><span class="text-gray-300">🛡️ На одобрение</span>
                 </div>
                 <div class="nav-item px-4 py-3 rounded-lg flex items-center space-x-3" data-tab="users">
-                    <i class="fas fa-users w-5 text-purple-400"></i>
-                    <span class="text-gray-300">👥 Пользователи</span>
+                    <i class="fas fa-users w-5 text-purple-400"></i><span class="text-gray-300">👥 Пользователи</span>
                 </div>
             </div>
             
@@ -199,37 +120,23 @@
     
     <div class="main-content">
         <div class="container mx-auto px-6 py-8">
-            <!-- Ивенты -->
             <div id="eventsTab" class="tab-content">
                 <div id="eventsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
             </div>
 
-            <!-- Создать анонс -->
             <div id="announceTab" class="tab-content" style="display:none;">
                 <div class="card p-6 bg-white/5 rounded-xl">
                     <h3 class="text-xl font-bold text-white mb-4">📢 Создать анонс ивента</h3>
-                    <p class="text-gray-400 text-sm mb-4">Анонс будет отправлен администраторам на одобрение</p>
+                    <p class="text-gray-400 text-sm mb-4">Анонс появится на одобрение у администраторов</p>
                     <form id="announceForm">
                         <input type="text" id="announceTitle" placeholder="📌 Название ивента" class="input-dark mb-3" required>
                         <textarea id="announceDescription" placeholder="📝 Описание ивента" rows="3" class="input-dark mb-3" required></textarea>
-                        
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
-                            <div>
-                                <label class="text-gray-400 text-sm block mb-1">👥 Помощники</label>
-                                <input type="number" id="announceHelpers" placeholder="Сколько нужно" class="input-dark" min="0" value="0">
-                            </div>
-                            <div>
-                                <label class="text-gray-400 text-sm block mb-1">🎭 Актёры</label>
-                                <input type="number" id="announceActors" placeholder="Сколько нужно" class="input-dark" min="0" value="0">
-                            </div>
-                            <div>
-                                <label class="text-gray-400 text-sm block mb-1">🏗️ Строители</label>
-                                <input type="number" id="announceBuilders" placeholder="Сколько нужно" class="input-dark" min="0" value="0">
-                            </div>
+                            <div><label class="text-gray-400 text-sm block mb-1">👥 Помощники</label><input type="number" id="announceHelpers" placeholder="Сколько нужно" class="input-dark" min="0" value="0"></div>
+                            <div><label class="text-gray-400 text-sm block mb-1">🎭 Актёры</label><input type="number" id="announceActors" placeholder="Сколько нужно" class="input-dark" min="0" value="0"></div>
+                            <div><label class="text-gray-400 text-sm block mb-1">🏗️ Строители</label><input type="number" id="announceBuilders" placeholder="Сколько нужно" class="input-dark" min="0" value="0"></div>
                         </div>
-                        
                         <textarea id="announceExtra" placeholder="➕ Дополнительная информация (дата, время, требования и т.д.)" rows="2" class="input-dark mb-4"></textarea>
-                        
                         <button type="submit" class="btn-blue w-full py-3 rounded-xl font-semibold text-white">
                             <i class="fas fa-paper-plane mr-2"></i> Отправить на одобрение
                         </button>
@@ -237,7 +144,6 @@
                 </div>
             </div>
 
-            <!-- Модерация (только для админов) -->
             <div id="moderationTab" class="tab-content" style="display:none;">
                 <h3 class="text-xl font-bold text-white mb-4">🛡️ Анонсы на одобрение</h3>
                 <div id="pendingAnnouncesList" class="space-y-4"></div>
@@ -246,7 +152,6 @@
                 <div id="pendingEventsList" class="space-y-4"></div>
             </div>
 
-            <!-- Пользователи -->
             <div id="usersTab" class="tab-content" style="display:none;">
                 <h3 class="text-xl font-bold text-white mb-4">👥 Пользователи</h3>
                 <div id="usersList" class="space-y-3"></div>
@@ -295,16 +200,12 @@
         const savedEvents = localStorage.getItem('events');
         const savedPendingAnnounces = localStorage.getItem('pendingAnnounces');
         const savedPendingEvents = localStorage.getItem('pendingEvents');
-        
         if (savedEvents) events = JSON.parse(savedEvents);
         if (savedPendingAnnounces) pendingAnnounces = JSON.parse(savedPendingAnnounces);
         if (savedPendingEvents) pendingEvents = JSON.parse(savedPendingEvents);
-        
         renderEvents();
         renderUsersList();
-        if (currentUser?.role === 'admin') {
-            renderModeration();
-        }
+        renderModeration();
     }
     
     function saveAllData() {
@@ -316,53 +217,17 @@
     function renderUsersList() {
         const container = document.getElementById('usersList');
         if (!container) return;
-        
-        const roleLabels = {
-            'admin': '<span class="text-red-400"><i class="fas fa-crown"></i> Администратор</span>',
-            'user': '<span class="text-blue-400"><i class="fas fa-user"></i> Пользователь</span>'
-        };
-        
+        const roleLabels = { 'admin': '<span class="text-red-400"><i class="fas fa-crown"></i> Администратор</span>', 'user': '<span class="text-blue-400"><i class="fas fa-user"></i> Пользователь</span>' };
         container.innerHTML = users.map(u => `
             <div class="user-card flex items-center justify-between p-3 bg-white/5 rounded-xl">
                 <div class="flex items-center space-x-3">
                     <img class="w-12 h-12 rounded-full object-cover border-2 border-red-500" src="${u.avatar || 'https://ui-avatars.com/api/?background=cc0000&color=fff&bold=true&size=40&name=' + (u.username || 'U').substring(0,2)}" alt="avatar">
-                    <div>
-                        <p class="text-white font-medium">${escapeHtml(u.username)}</p>
-                        <p class="text-xs">${roleLabels[u.role] || u.role}</p>
-                    </div>
+                    <div><p class="text-white font-medium">${escapeHtml(u.username)}</p><p class="text-xs">${roleLabels[u.role] || u.role}</p></div>
                 </div>
             </div>
         `).join('');
     }
     
-    // Отправка уведомления ТОЛЬКО администратору (в канал "На одобрение")
-    async function sendAnnouncementToAdmin(data, author) {
-        const embed = {
-            title: '📢 НОВЫЙ АНОНС НА ОДОБРЕНИЕ',
-            description: `**${data.title}**\n\n${data.description}`,
-            color: 0xeab308,
-            fields: [
-                { name: '👥 ТРЕБУЕТСЯ ПОМОЩНИКОВ', value: `${data.helpers} человек`, inline: true },
-                { name: '🎭 ТРЕБУЕТСЯ АКТЁРОВ', value: `${data.actors} человек`, inline: true },
-                { name: '🏗️ ТРЕБУЕТСЯ СТРОИТЕЛЕЙ', value: `${data.builders} человек`, inline: true },
-                { name: '📝 АВТОР', value: author, inline: true }
-            ],
-            footer: { text: 'Требуется одобрение администратора' },
-            timestamp: new Date().toISOString()
-        };
-        if (data.extra) embed.fields.push({ name: '📝 ДОПОЛНИТЕЛЬНО', value: data.extra, inline: false });
-        
-        try {
-            await fetch(ANNOUNCE_WEBHOOK_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: 'Gl1tch Events', embeds: [embed], content: '@here **НОВЫЙ АНОНС НА ОДОБРЕНИЕ!**' })
-            });
-            return true;
-        } catch (error) { return false; }
-    }
-    
-    // Отправка в ОБЩИЙ АНОНС канал только после одобрения
     async function sendApprovedAnnouncement(data) {
         const embed = {
             title: '📢 АНОНС ИВЕНТА',
@@ -377,12 +242,11 @@
             timestamp: new Date().toISOString()
         };
         if (data.extra) embed.fields.push({ name: '📝 ДОПОЛНИТЕЛЬНО', value: data.extra, inline: false });
-        
         try {
             await fetch(DISCORD_WEBHOOK_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: 'Gl1tch Events', embeds: [embed], content: '@everyone **НОВЫЙ АНОНС ИВЕНТА!**' })
+                body: JSON.stringify({ username: 'Gl1tch Events', embeds: [embed], content: '' })
             });
             return true;
         } catch (error) { return false; }
@@ -400,7 +264,7 @@
             await fetch(ANNOUNCE_WEBHOOK_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: 'Gl1tch Events', embeds: [embed], content: '❌ **АНОНС ОТКЛОНЕН!**' })
+                body: JSON.stringify({ username: 'Gl1tch Events', embeds: [embed], content: '' })
             });
             return true;
         } catch (error) { return false; }
@@ -426,56 +290,43 @@
             await fetch(DISCORD_WEBHOOK_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: 'Gl1tch Events', embeds: [embed], content: '📋 **НОВЫЙ ОТЧЁТ О ИВЕНТЕ!**' })
+                body: JSON.stringify({ username: 'Gl1tch Events', embeds: [embed], content: '' })
             });
             return true;
         } catch (error) { return false; }
     }
     
     async function createAnnounce(title, description, helpers, actors, builders, extra) {
-        const newAnnounce = {
-            id: Date.now(),
-            title, description, helpers, actors, builders, extra,
-            created_at: new Date().toISOString(),
-            created_by: currentUser.username,
-            status: 'pending'
-        };
+        const newAnnounce = { id: Date.now(), title, description, helpers, actors, builders, extra, created_at: new Date().toISOString(), created_by: currentUser.username, status: 'pending' };
         pendingAnnounces.push(newAnnounce);
         saveAllData();
-        // Отправляем уведомление ТОЛЬКО администратору
-        await sendAnnouncementToAdmin({ title, description, helpers, actors, builders, extra }, currentUser.username);
         return newAnnounce;
+    }
+    
+    // Отмена анонса (только для автора, только пока на одобрении)
+    async function cancelAnnounce(id) {
+        const announce = pendingAnnounces.find(a => a.id == id);
+        // Проверка: только автор и только статус pending
+        if (announce && announce.created_by === currentUser.username && announce.status === 'pending') {
+            pendingAnnounces = pendingAnnounces.filter(a => a.id != id);
+            saveAllData();
+            renderModeration();
+            showToast('❌ Анонс отменён');
+            return true;
+        } else {
+            showToast('⚠️ Нельзя отменить этот анонс');
+            return false;
+        }
     }
     
     async function approveAnnounce(id) {
         const announce = pendingAnnounces.find(a => a.id == id);
         if (announce) {
             pendingAnnounces = pendingAnnounces.filter(a => a.id != id);
-            const newEvent = {
-                id: Date.now(),
-                title: announce.title,
-                description: announce.description,
-                assistants: '',
-                actors: '',
-                builders: '',
-                helpers_needed: { helpers: announce.helpers, actors: announce.actors, builders: announce.builders },
-                extra: announce.extra,
-                created_at: announce.created_at,
-                created_by: announce.created_by,
-                approved_by: currentUser.username,
-                status: 'approved'
-            };
+            const newEvent = { id: Date.now(), title: announce.title, description: announce.description, assistants: '', actors: '', builders: '', helpers_needed: { helpers: announce.helpers, actors: announce.actors, builders: announce.builders }, extra: announce.extra, created_at: announce.created_at, created_by: announce.created_by, approved_by: currentUser.username, status: 'approved' };
             pendingEvents.push(newEvent);
             saveAllData();
-            // Только после одобрения отправляем в общий АНОНС канал
-            await sendApprovedAnnouncement({
-                title: announce.title,
-                description: announce.description,
-                helpers: announce.helpers,
-                actors: announce.actors,
-                builders: announce.builders,
-                extra: announce.extra
-            });
+            await sendApprovedAnnouncement({ title: announce.title, description: announce.description, helpers: announce.helpers, actors: announce.actors, builders: announce.builders, extra: announce.extra });
             renderModeration();
             return true;
         }
@@ -498,15 +349,7 @@
         const event = pendingEvents.find(e => e.id == id);
         if (event) {
             pendingEvents = pendingEvents.filter(e => e.id != id);
-            const completedEvent = {
-                ...event,
-                assistants: assistants || '',
-                actors: actors || '',
-                builders: builders || '',
-                completed_at: new Date().toISOString(),
-                completed_by: currentUser.username,
-                status: 'completed'
-            };
+            const completedEvent = { ...event, assistants: assistants || '', actors: actors || '', builders: builders || '', completed_at: new Date().toISOString(), completed_by: currentUser.username, status: 'completed' };
             events.unshift(completedEvent);
             saveAllData();
             await sendReport(completedEvent, currentUser.username);
@@ -521,20 +364,12 @@
         const container = document.getElementById('eventsList');
         if (!container) return;
         const completedEvents = events.filter(e => e.status === 'completed');
-        if (completedEvents.length === 0) {
-            container.innerHTML = '<div class="col-span-full text-center py-12 text-gray-400">Нет проведённых ивентов</div>';
-            return;
-        }
+        if (completedEvents.length === 0) { container.innerHTML = '<div class="col-span-full text-center py-12 text-gray-400">Нет проведённых ивентов</div>'; return; }
         container.innerHTML = completedEvents.map(e => `
             <div class="card p-5 bg-white/5 rounded-xl animate-fadeInUp">
                 <div class="flex justify-between items-start mb-3">
-                    <div class="flex-1">
-                        <h3 class="text-xl font-bold text-white">${escapeHtml(e.title)}</h3>
-                        <div class="text-sm mt-1"><span class="status-completed"><i class="fas fa-check-circle"></i> ✅ Проведён</span></div>
-                    </div>
-                    ${currentUser?.role === 'admin' ? `
-                        <button onclick="deleteEvent(${e.id})" class="text-red-500 hover:text-red-400"><i class="fas fa-trash"></i></button>
-                    ` : ''}
+                    <div class="flex-1"><h3 class="text-xl font-bold text-white">${escapeHtml(e.title)}</h3><div class="text-sm mt-1"><span class="status-completed"><i class="fas fa-check-circle"></i> ✅ Проведён</span></div></div>
+                    ${currentUser?.role === 'admin' ? `<button onclick="deleteEvent(${e.id})" class="text-red-500 hover:text-red-400"><i class="fas fa-trash"></i></button>` : ''}
                 </div>
                 <p class="text-gray-300 mb-3">${escapeHtml((e.description || '').substring(0, 100))}${(e.description || '').length > 100 ? '...' : ''}</p>
                 <div class="flex justify-between items-center text-sm text-gray-500">
@@ -548,10 +383,12 @@
     function renderModeration() {
         const pendingContainer = document.getElementById('pendingAnnouncesList');
         if (pendingContainer) {
-            if (pendingAnnounces.length === 0) {
+            // Для админа — все анонсы, для пользователя — только свои
+            const visibleAnnounces = (currentUser?.role === 'admin') ? pendingAnnounces : pendingAnnounces.filter(a => a.created_by === currentUser?.username);
+            if (visibleAnnounces.length === 0) {
                 pendingContainer.innerHTML = '<div class="text-center py-8 text-gray-400">Нет анонсов на одобрение</div>';
             } else {
-                pendingContainer.innerHTML = pendingAnnounces.map(a => `
+                pendingContainer.innerHTML = visibleAnnounces.map(a => `
                     <div class="card p-4 bg-white/5 rounded-xl">
                         <div class="flex justify-between items-start">
                             <div class="flex-1">
@@ -566,8 +403,12 @@
                                 ${a.extra ? `<p class="text-gray-500 text-sm mt-2">➕ ${escapeHtml(a.extra)}</p>` : ''}
                             </div>
                             <div class="flex gap-2 ml-4">
-                                <button onclick="approve(${a.id})" class="btn-green px-4 py-2 rounded-lg text-white text-sm"><i class="fas fa-check"></i> Одобрить</button>
-                                <button onclick="openRejectModal(${a.id}, '${escapeHtml(a.title)}')" class="btn-red px-4 py-2 rounded-lg text-white text-sm"><i class="fas fa-times"></i> Отклонить</button>
+                                ${currentUser?.role === 'admin' ? `
+                                    <button onclick="approve(${a.id})" class="btn-green px-4 py-2 rounded-lg text-white text-sm"><i class="fas fa-check"></i> Одобрить</button>
+                                    <button onclick="openRejectModal(${a.id}, '${escapeHtml(a.title)}')" class="btn-red px-4 py-2 rounded-lg text-white text-sm"><i class="fas fa-times"></i> Отклонить</button>
+                                ` : `
+                                    ${a.created_by === currentUser?.username ? `<button onclick="cancelAnnounce(${a.id})" class="btn-yellow px-4 py-2 rounded-lg text-white text-sm"><i class="fas fa-times"></i> Отменить</button>` : ''}
+                                `}
                             </div>
                         </div>
                     </div>
@@ -595,7 +436,7 @@
                             </div>
                             <div class="flex gap-2 ml-4">
                                 <button onclick="openCompleteModal(${e.id})" class="btn-yellow px-4 py-2 rounded-lg text-white text-sm"><i class="fas fa-play"></i> Провести</button>
-                                <button onclick="deletePendingEvent(${e.id})" class="text-red-500 hover:text-red-400"><i class="fas fa-trash"></i></button>
+                                ${currentUser?.role === 'admin' ? `<button onclick="deletePendingEvent(${e.id})" class="text-red-500 hover:text-red-400"><i class="fas fa-trash"></i></button>` : ''}
                             </div>
                         </div>
                     </div>
@@ -629,6 +470,10 @@
         document.body.appendChild(toast);
         setTimeout(() => toast.remove(), 3000);
     }
+    
+    window.cancelAnnounce = async (id) => {
+        await cancelAnnounce(id);
+    };
     
     window.approve = async (id) => {
         await approveAnnounce(id);
@@ -700,7 +545,7 @@
             if (currentUser.role === 'admin') {
                 document.getElementById('moderationTabBtn').style.display = 'flex';
             } else {
-                document.getElementById('moderationTabBtn').style.display = 'none';
+                document.getElementById('moderationTabBtn').style.display = 'flex'; // пользователи тоже видят вкладку, но видят только свои анонсы
             }
             return true;
         }
@@ -738,8 +583,9 @@
         const extra = document.getElementById('announceExtra').value;
         
         await createAnnounce(title, description, helpers, actors, builders, extra);
-        showToast('✅ Анонс отправлен на одобрение администраторам!');
+        showToast('✅ Анонс отправлен на одобрение!');
         document.getElementById('announceForm').reset();
+        renderModeration();
     });
     
     document.getElementById('completeEventForm').addEventListener('submit', async (e) => {
@@ -811,9 +657,7 @@
         document.getElementById('userName').innerHTML = currentUser.username;
         document.getElementById('userRole').innerHTML = currentUser.role === 'admin' ? '👑 Администратор' : '👤 Пользователь';
         
-        if (currentUser.role === 'admin') {
-            document.getElementById('moderationTabBtn').style.display = 'flex';
-        }
+        document.getElementById('moderationTabBtn').style.display = 'flex';
         loadData();
     }
 </script>
