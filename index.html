@@ -214,25 +214,37 @@
                 </div>
             </div>
 
-            <!-- Анонс -->
-            <div id="announceTab" class="tab-content" style="display:none;">
-                <div class="card p-6 bg-white/5 rounded-xl">
-                    <h3 class="text-xl font-bold text-white mb-4">📢 Создать анонс ивента</h3>
-                    <form id="announceForm">
-                        <input type="text" id="announceTitle" placeholder="Название ивента" class="input-dark mb-3" required>
-                        <textarea id="announceDescription" placeholder="Описание ивента" rows="3" class="input-dark mb-3" required></textarea>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
-                            <input type="number" id="announceHelpers" placeholder="👥 Требуется помощников" class="input-dark" min="0" value="0">
-                            <input type="number" id="announceActors" placeholder="🎭 Требуется актёров" class="input-dark" min="0" value="0">
-                            <input type="number" id="announceBuilders" placeholder="🏗️ Требуется строителей" class="input-dark" min="0" value="0">
-                        </div>
-                        <textarea id="announceExtra" placeholder="Дополнительная информация (дата, время, требования и т.д.)" rows="2" class="input-dark mb-4"></textarea>
-                        <button type="submit" class="btn-blue w-full py-3 rounded-xl font-semibold text-white">
-                            <i class="fas fa-paper-plane mr-2"></i> Опубликовать анонс в Discord
-                        </button>
-                    </form>
+<!-- Анонс -->
+<div id="announceTab" class="tab-content" style="display:none;">
+    <div class="card p-6 bg-white/5 rounded-xl">
+        <h3 class="text-xl font-bold text-white mb-4">📢 Создать анонс ивента</h3>
+        <form id="announceForm">
+            <input type="text" id="announceTitle" placeholder="📌 Название ивента" class="input-dark mb-3" required>
+            <textarea id="announceDescription" placeholder="📝 Описание ивента" rows="3" class="input-dark mb-3" required></textarea>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                <div>
+                    <label class="text-gray-400 text-sm block mb-1">👥 Помощники</label>
+                    <input type="number" id="announceHelpers" placeholder="Сколько нужно" class="input-dark" min="0" value="0">
+                </div>
+                <div>
+                    <label class="text-gray-400 text-sm block mb-1">🎭 Актёры</label>
+                    <input type="number" id="announceActors" placeholder="Сколько нужно" class="input-dark" min="0" value="0">
+                </div>
+                <div>
+                    <label class="text-gray-400 text-sm block mb-1">🏗️ Строители</label>
+                    <input type="number" id="announceBuilders" placeholder="Сколько нужно" class="input-dark" min="0" value="0">
                 </div>
             </div>
+            
+            <textarea id="announceExtra" placeholder="➕ Дополнительная информация (дата, время, требования и т.д.)" rows="2" class="input-dark mb-4"></textarea>
+            
+            <button type="submit" class="btn-blue w-full py-3 rounded-xl font-semibold text-white">
+                <i class="fas fa-paper-plane mr-2"></i> Опубликовать анонс в Discord
+            </button>
+        </form>
+    </div>
+</div>
 
             <!-- Пользователи -->
             <div id="usersTab" class="tab-content" style="display:none;">
