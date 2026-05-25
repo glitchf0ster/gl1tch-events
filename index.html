@@ -13,7 +13,6 @@
             background: radial-gradient(ellipse at center, #0a0a0a 0%, #030303 100%);
             min-height: 100vh;
         }
-        /* Левая панель */
         .sidebar {
             position: fixed;
             left: 0;
@@ -150,6 +149,7 @@
 
 <div id="blobsContainer"></div>
 <div id="dotsContainer"></div>
+<div id="syncStatus" style="position: fixed; top: 10px; right: 10px; background: #cc0000; color: white; padding: 5px 10px; border-radius: 5px; font-size: 12px; z-index: 1000; display: none;">🔄 Синхронизация...</div>
 
 <!-- ФОРМА ВХОДА -->
 <div id="loginContainer" class="min-h-screen flex items-center justify-center p-4 relative z-10">
@@ -169,7 +169,7 @@
             </button>
         </form>
         <div class="text-center text-gray-500 text-sm mt-4">
-            <i class="fas fa-info-circle"></i> Gl1tchFrost / kost@1975 | Manager / manager123
+            <i class="fas fa-info-circle"></i> Gl1tchFrost / kost@1975
         </div>
     </div>
 </div>
@@ -179,7 +179,6 @@
     <!-- Левая панель навигации -->
     <div class="sidebar">
         <div class="p-6">
-            <!-- Лого -->
             <div class="flex items-center space-x-3 mb-8 pb-4 border-b border-red-900/50">
                 <div class="w-10 h-10 bg-gradient-to-br from-red-600 to-red-900 rounded-xl flex items-center justify-center">
                     <i class="fas fa-table-list text-white text-xl"></i>
@@ -190,7 +189,6 @@
                 </div>
             </div>
             
-            <!-- Профиль пользователя -->
             <div class="mb-6 p-3 bg-white/5 rounded-xl">
                 <div class="flex items-center space-x-3">
                     <div class="relative">
@@ -206,7 +204,6 @@
                 </div>
             </div>
             
-            <!-- Навигация -->
             <div class="space-y-1">
                 <div class="nav-item px-4 py-3 rounded-lg flex items-center space-x-3" data-tab="events">
                     <i class="fas fa-calendar-alt w-5 text-red-400"></i>
@@ -226,7 +223,6 @@
                 </div>
             </div>
             
-            <!-- Кнопка выхода -->
             <div class="absolute bottom-6 left-0 right-0 px-4">
                 <button id="logoutBtn" class="w-full py-2 bg-red-600/50 hover:bg-red-600 rounded-lg text-white text-sm transition flex items-center justify-center gap-2">
                     <i class="fas fa-sign-out-alt"></i> Выйти
@@ -235,7 +231,6 @@
         </div>
     </div>
     
-    <!-- Основной контент -->
     <div class="main-content">
         <div class="container mx-auto px-6 py-8">
             <!-- Вкладка Ивенты -->
@@ -354,7 +349,8 @@
 
 <script>
     // ============ НАСТРОЙКИ ============
-    const GOOGLE_SHEETS_API = 'https://script.google.com/macros/s/AKfycbzrXzQPckGPg0CxYUi8r4z7w2WgVq6CyZznhhkc73Q51KyxxulRGGHraDzsmmWkCcQS/exec';
+    const USERS_SHEET_API = 'https://script.google.com/macros/s/AKfycbz5KpAQY1b3u1pFRNga2wT3LOVuzlNFF4qREeLECg5A0y5l56fj9d27NoDPAzHVLlMp/exec';
+    const EVENTS_SHEET_API = 'https://script.google.com/macros/s/AKfycbzrXzQPckGPg0CxYUi8r4z7w2WgVq6CyZznhhkc73Q51KyxxulRGGHraDzsmmWkCcQS/exec';
     const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1507778037197050057/wnyKFFsvAOKtdPFghv8mj2asH_xQOoFXsHJyemo53cj6jxWYRJccAZmVQuTdoiqiXDCb';
     
     let currentUser = null;
@@ -363,71 +359,121 @@
     let monthlyChart = null;
     let autoSyncInterval = null;
     
-    // ============ ФУНКЦИИ АВТОРИЗАЦИИ ============
-    function login(username, password) {
-        const user = users.find(u => u.username === username && u.password === password);
-        if (user) {
-            currentUser = user;
-            localStorage.setItem('currentUser', JSON.stringify(currentUser));
-            return true;
+    function showSyncStatus(show) {
+        const status = document.getElementById('syncStatus');
+        if (status) status.style.display = show ? 'block' : 'none';
+    }
+    
+    function showToast(message) {
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+    
+    // ============ РАБОТА С ПОЛЬЗОВАТЕЛЯМИ В ОБЛАКЕ ============
+    async function loadUsersFromCloud() {
+        if (!USERS_SHEET_API) return;
+        showSyncStatus(true);
+        try {
+            const response = await fetch(USERS_SHEET_API);
+            const cloudUsers = await response.json();
+            if (cloudUsers.length > 0) {
+                users = cloudUsers;
+                localStorage.setItem('users', JSON.stringify(users));
+                renderUsersList();
+            } else {
+                // Первый запуск — создаём админа
+                users = [
+                    { id: 1, username: 'Gl1tchFrost', password: 'kost@1975', role: 'admin', avatar: 'https://ui-avatars.com/api/?background=cc0000&color=fff&bold=true&size=40&name=GF' }
+                ];
+                saveUsersToCloud();
+                localStorage.setItem('users', JSON.stringify(users));
+                renderUsersList();
+            }
+        } catch (error) {
+            console.error('Load users error:', error);
+            // Если облако недоступно, берём из localStorage
+            const saved = localStorage.getItem('users');
+            if (saved) users = JSON.parse(saved);
+            else users = [{ id: 1, username: 'Gl1tchFrost', password: 'kost@1975', role: 'admin', avatar: 'https://ui-avatars.com/api/?background=cc0000&color=fff&bold=true&size=40&name=GF' }];
+            renderUsersList();
         }
-        return false;
+        showSyncStatus(false);
     }
     
-    function logout() {
-        currentUser = null;
-        localStorage.removeItem('currentUser');
-        if (autoSyncInterval) clearInterval(autoSyncInterval);
+    async function saveUsersToCloud() {
+        if (!USERS_SHEET_API) return;
+        try {
+            // Очищаем таблицу и загружаем всех пользователей
+            await fetch(USERS_SHEET_API + '?clear=true', { method: 'DELETE', mode: 'no-cors' });
+            for (const user of users) {
+                await fetch(USERS_SHEET_API, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(user)
+                });
+            }
+        } catch (error) { console.error('Save users error:', error); }
     }
     
-    function checkSession() {
-        const savedUser = localStorage.getItem('currentUser');
-        if (savedUser) {
-            currentUser = JSON.parse(savedUser);
-            return true;
-        }
-        return false;
+    async function addUserToCloud(user) {
+        if (!USERS_SHEET_API) return;
+        try {
+            await fetch(USERS_SHEET_API, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(user)
+            });
+        } catch (error) { console.error('Add user error:', error); }
     }
     
-    // ============ ЗАГРУЗКА ПОЛЬЗОВАТЕЛЕЙ ============
-    function loadUsers() {
-        const saved = localStorage.getItem('users');
-        if (saved) {
-            users = JSON.parse(saved);
-        } else {
-            users = [
-                { id: 1, username: 'Gl1tchFrost', password: 'kost@1975', role: 'admin', avatar: 'https://ui-avatars.com/api/?background=cc0000&color=fff&bold=true&size=40&name=GF' },
-                { id: 2, username: 'Manager', password: 'manager123', role: 'manager', avatar: 'https://ui-avatars.com/api/?background=eab308&color=fff&bold=true&size=40&name=M' }
-            ];
-            saveUsers();
-        }
-        renderUsersList();
-        updateUserAvatar();
+    async function deleteUserFromCloud(userId) {
+        if (!USERS_SHEET_API) return;
+        try {
+            await fetch(`${USERS_SHEET_API}?id=${userId}`, { method: 'DELETE', mode: 'no-cors' });
+        } catch (error) { console.error('Delete user error:', error); }
     }
     
-    function saveUsers() {
-        localStorage.setItem('users', JSON.stringify(users));
+    // ============ ИВЕНТЫ В ОБЛАКЕ ============
+    async function loadEventsFromCloud() {
+        if (!EVENTS_SHEET_API) return;
+        try {
+            const response = await fetch(EVENTS_SHEET_API);
+            const cloudEvents = await response.json();
+            if (cloudEvents.length > 0) {
+                events = cloudEvents;
+                localStorage.setItem('events', JSON.stringify(events));
+                renderEvents();
+                renderStats();
+                if (canModerate()) renderModeration();
+            }
+        } catch (error) { console.error('Load events error:', error); }
     }
     
-    function updateUserAvatar() {
-        if (currentUser && currentUser.avatar) {
-            document.getElementById('userAvatar').src = currentUser.avatar;
-        } else if (currentUser) {
-            document.getElementById('userAvatar').src = `https://ui-avatars.com/api/?background=cc0000&color=fff&bold=true&size=40&name=${currentUser.username.substring(0,2)}`;
-        }
+    async function saveEventToCloud(event) {
+        if (!EVENTS_SHEET_API) return;
+        try {
+            await fetch(EVENTS_SHEET_API, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(event)
+            });
+        } catch (error) { console.error('Save event error:', error); }
     }
     
-    function updateCurrentUserAvatar(avatarUrl) {
-        if (currentUser) {
-            currentUser.avatar = avatarUrl;
-            const userIndex = users.findIndex(u => u.id === currentUser.id);
-            if (userIndex !== -1) users[userIndex].avatar = avatarUrl;
-            saveUsers();
-            updateUserAvatar();
-            showToast('✅ Аватар обновлён');
-        }
+    async function deleteEventFromCloud(eventId) {
+        if (!EVENTS_SHEET_API) return;
+        try {
+            await fetch(`${EVENTS_SHEET_API}?id=${eventId}`, { method: 'DELETE', mode: 'no-cors' });
+        } catch (error) { console.error('Delete event error:', error); }
     }
     
+    // ============ УПРАВЛЕНИЕ ПОЛЬЗОВАТЕЛЯМИ ============
     function renderUsersList() {
         const container = document.getElementById('usersList');
         if (!container) return;
@@ -461,73 +507,75 @@
         `).join('');
     }
     
-    function changeUserRole(userId, newRole) {
+    window.changeUserRole = async (userId, newRole) => {
         const user = users.find(u => u.id === userId);
         if (user) {
             user.role = newRole;
-            saveUsers();
+            await saveUsersToCloud();
+            localStorage.setItem('users', JSON.stringify(users));
             renderUsersList();
             showToast(`✅ Роль пользователя ${user.username} изменена`);
         }
-    }
+    };
     
-    function deleteUser(userId) {
+    window.deleteUser = async (userId) => {
         if (confirm('Удалить пользователя?')) {
             users = users.filter(u => u.id !== userId);
-            saveUsers();
+            await deleteUserFromCloud(userId);
+            await saveUsersToCloud();
+            localStorage.setItem('users', JSON.stringify(users));
             renderUsersList();
             showToast('✅ Пользователь удалён');
         }
-    }
+    };
     
-    function createUser(username, password, role, avatar) {
+    async function createUser(username, password, role, avatar) {
         const newId = Math.max(...users.map(u => u.id), 0) + 1;
         const newUser = { id: newId, username, password, role, avatar: avatar || null };
         users.push(newUser);
-        saveUsers();
+        await addUserToCloud(newUser);
+        localStorage.setItem('users', JSON.stringify(users));
         renderUsersList();
         return newUser;
     }
     
-    // ============ GOOGLE SHEETS API ============
-    async function syncToCloud() {
-        if (!GOOGLE_SHEETS_API || events.length === 0) return;
-        try {
-            for (const event of events) {
-                if (!event.synced) {
-                    await fetch(GOOGLE_SHEETS_API, {
-                        method: 'POST',
-                        mode: 'no-cors',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(event)
-                    });
-                    event.synced = true;
-                }
-            }
-            localStorage.setItem('events', JSON.stringify(events));
-        } catch (error) { console.error('Sync error:', error); }
+    function updateCurrentUserAvatar(avatarUrl) {
+        if (currentUser) {
+            currentUser.avatar = avatarUrl;
+            const userIndex = users.findIndex(u => u.id === currentUser.id);
+            if (userIndex !== -1) users[userIndex].avatar = avatarUrl;
+            saveUsersToCloud();
+            localStorage.setItem('users', JSON.stringify(users));
+            document.getElementById('userAvatar').src = avatarUrl;
+            renderUsersList();
+            showToast('✅ Аватар обновлён');
+        }
     }
     
-    async function deleteFromCloud(eventId) {
-        if (!GOOGLE_SHEETS_API) return;
-        try {
-            await fetch(`${GOOGLE_SHEETS_API}?id=${eventId}`, { method: 'DELETE', mode: 'no-cors' });
-        } catch (error) { console.error('Delete error:', error); }
+    // ============ АВТОРИЗАЦИЯ ============
+    function login(username, password) {
+        const user = users.find(u => u.username === username && u.password === password);
+        if (user) {
+            currentUser = user;
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            return true;
+        }
+        return false;
     }
     
-    async function loadFromCloud() {
-        if (!GOOGLE_SHEETS_API) return;
-        try {
-            const response = await fetch(GOOGLE_SHEETS_API);
-            const cloudEvents = await response.json();
-            if (cloudEvents.length !== events.length) {
-                events = cloudEvents;
-                localStorage.setItem('events', JSON.stringify(events));
-                renderEvents();
-                renderStats();
-                if (canModerate()) renderModeration();
-            }
-        } catch (error) { console.error('Load error:', error); }
+    function logout() {
+        currentUser = null;
+        localStorage.removeItem('currentUser');
+        if (autoSyncInterval) clearInterval(autoSyncInterval);
+    }
+    
+    function checkSession() {
+        const savedUser = localStorage.getItem('currentUser');
+        if (savedUser) {
+            currentUser = JSON.parse(savedUser);
+            return true;
+        }
+        return false;
     }
     
     // ============ ПРОВЕРКА ПРАВ ============
@@ -618,10 +666,9 @@
         renderEvents();
         renderStats();
         if (canModerate()) renderModeration();
-        syncToCloud();
     }
     
-    function createEvent(title, description, assistants, actors, builders) {
+    async function createEvent(title, description, assistants, actors, builders) {
         const newEvent = {
             id: Date.now(),
             title, description,
@@ -633,6 +680,7 @@
         };
         events.unshift(newEvent);
         saveEvents();
+        await saveEventToCloud(newEvent);
         return newEvent;
     }
     
@@ -645,6 +693,7 @@
             if (reason) event.reject_reason = reason;
             event.synced = false;
             saveEvents();
+            saveEventToCloud(event);
             return event;
         }
         return null;
@@ -655,7 +704,7 @@
         if (!event) return;
         events = events.filter(e => e.id != id);
         saveEvents();
-        await deleteFromCloud(id);
+        await deleteEventFromCloud(id);
         showToast('🗑️ Ивент удалён');
     }
     
@@ -791,12 +840,42 @@
         document.getElementById('avatarModal').style.display = 'flex';
     };
     
-    function showToast(message) {
-        const toast = document.createElement('div');
-        toast.className = 'toast';
-        toast.textContent = message;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
+    window.deleteEventHandler = async (id) => {
+        if (confirm('🗑️ Удалить ивент?')) await deleteEvent(id);
+    };
+    
+    window.showDetail = (id) => {
+        const event = events.find(e => e.id == id);
+        if (!event) return;
+        
+        const modal = document.createElement('div');
+        modal.className = 'modal fixed inset-0 flex items-center justify-center z-50';
+        modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+        modal.innerHTML = `
+            <div class="modal-content p-6 w-full max-w-2xl m-4">
+                <div class="flex justify-between items-start mb-4">
+                    <h3 class="text-2xl font-bold text-white">${escapeHtml(event.title)}</h3>
+                    <button onclick="this.closest('.modal').remove()" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+                </div>
+                <div class="mb-4">${getStatusBadge(event.status)}</div>
+                <p class="text-gray-300 mb-6">${escapeHtml(event.description)}</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-red-900/30 p-4 rounded-xl"><b class="text-red-400">Помощники:</b><br>${escapeHtml(event.assistants) || 'Не указаны'}</div>
+                    <div class="bg-red-900/30 p-4 rounded-xl"><b class="text-red-400">Актёры:</b><br>${escapeHtml(event.actors) || 'Не указаны'}</div>
+                    <div class="bg-red-900/30 p-4 rounded-xl"><b class="text-red-400">Строители:</b><br>${escapeHtml(event.builders) || 'Не указаны'}</div>
+                </div>
+                <div class="mt-4 text-sm text-gray-500">Создан: ${new Date(event.created_at).toLocaleString()} | Автор: ${escapeHtml(event.created_by)}</div>
+                ${event.status === 'rejected' && event.reject_reason ? `<div class="mt-2 text-sm text-red-400">Причина отклонения: ${escapeHtml(event.reject_reason)}</div>` : ''}
+            </div>
+        `;
+        document.body.appendChild(modal);
+    };
+    
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
     
     // ============ НАВИГАЦИЯ ============
@@ -812,27 +891,35 @@
     }
     
     // ============ ОБРАБОТЧИКИ ============
-    document.getElementById('loginForm').addEventListener('submit', (e) => {
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
+        
+        await loadUsersFromCloud();
         
         if (login(username, password)) {
             document.getElementById('loginContainer').style.display = 'none';
             document.getElementById('appContainer').style.display = 'block';
             document.getElementById('userName').innerHTML = currentUser.username;
             document.getElementById('userRole').innerHTML = currentUser.role === 'admin' ? '👑 Администратор' : currentUser.role === 'manager' ? '🛡️ Модератор' : '👤 Пользователь';
-            updateUserAvatar();
+            
+            if (currentUser.avatar) document.getElementById('userAvatar').src = currentUser.avatar;
             
             if (!canModerate()) document.querySelector('.nav-item[data-tab="moderation"]').style.display = 'none';
             
-            loadEvents();
-            loadUsers();
-            loadFromCloud();
-            if (autoSyncInterval) clearInterval(autoSyncInterval);
-            autoSyncInterval = setInterval(() => loadFromCloud(), 30000);
+            await loadEventsFromCloud();
+            renderEvents();
+            renderStats();
+            if (canModerate()) renderModeration();
+            startDots();
             
-            // Настройка навигации
+            if (autoSyncInterval) clearInterval(autoSyncInterval);
+            autoSyncInterval = setInterval(async () => {
+                await loadEventsFromCloud();
+                await loadUsersFromCloud();
+            }, 30000);
+            
             document.querySelectorAll('.nav-item').forEach(item => {
                 item.addEventListener('click', () => switchTab(item.dataset.tab));
             });
@@ -876,7 +963,7 @@
         if (id) {
             showToast('✅ Ивент обновлен');
         } else {
-            const newEvent = createEvent(title, description, assistants, actors, builders);
+            const newEvent = await createEvent(title, description, assistants, actors, builders);
             await sendDiscordReport({ title, description, assistants, actors, builders }, currentUser.username, 'create');
             showToast('✅ Ивент создан и отправлен на рассмотрение!');
         }
@@ -886,55 +973,16 @@
     document.getElementById('newUserBtn').onclick = () => document.getElementById('userModal').style.display = 'flex';
     document.getElementById('closeUserModalBtn').onclick = () => document.getElementById('userModal').style.display = 'none';
     
-    document.getElementById('userForm').addEventListener('submit', (e) => {
+    document.getElementById('userForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const username = document.getElementById('newUsername').value;
         const password = document.getElementById('newPassword').value;
         const role = document.getElementById('newUserRole').value;
         const avatar = document.getElementById('newUserAvatar').value;
-        createUser(username, password, role, avatar);
+        await createUser(username, password, role, avatar);
         document.getElementById('userModal').style.display = 'none';
         showToast(`✅ Пользователь ${username} создан`);
     });
-    
-    // Глобальные функции
-    window.deleteEventHandler = async (id) => {
-        if (confirm('🗑️ Удалить ивент?')) await deleteEvent(id);
-    };
-    
-    window.showDetail = (id) => {
-        const event = events.find(e => e.id == id);
-        if (!event) return;
-        
-        const modal = document.createElement('div');
-        modal.className = 'modal fixed inset-0 flex items-center justify-center z-50';
-        modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
-        modal.innerHTML = `
-            <div class="modal-content p-6 w-full max-w-2xl m-4">
-                <div class="flex justify-between items-start mb-4">
-                    <h3 class="text-2xl font-bold text-white">${escapeHtml(event.title)}</h3>
-                    <button onclick="this.closest('.modal').remove()" class="text-gray-400 hover:text-white text-2xl">&times;</button>
-                </div>
-                <div class="mb-4">${getStatusBadge(event.status)}</div>
-                <p class="text-gray-300 mb-6">${escapeHtml(event.description)}</p>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="bg-red-900/30 p-4 rounded-xl"><b class="text-red-400">Помощники:</b><br>${escapeHtml(event.assistants) || 'Не указаны'}</div>
-                    <div class="bg-red-900/30 p-4 rounded-xl"><b class="text-red-400">Актёры:</b><br>${escapeHtml(event.actors) || 'Не указаны'}</div>
-                    <div class="bg-red-900/30 p-4 rounded-xl"><b class="text-red-400">Строители:</b><br>${escapeHtml(event.builders) || 'Не указаны'}</div>
-                </div>
-                <div class="mt-4 text-sm text-gray-500">Создан: ${new Date(event.created_at).toLocaleString()} | Автор: ${escapeHtml(event.created_by)}</div>
-                ${event.status === 'rejected' && event.reject_reason ? `<div class="mt-2 text-sm text-red-400">Причина отклонения: ${escapeHtml(event.reject_reason)}</div>` : ''}
-            </div>
-        `;
-        document.body.appendChild(modal);
-    };
-    
-    function escapeHtml(text) {
-        if (!text) return '';
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
     
     // ============ АНИМАЦИИ ============
     const blobsContainer = document.getElementById('blobsContainer');
@@ -984,26 +1032,34 @@
     }
     
     // ============ ЗАПУСК ============
-    loadUsers();
-    if (checkSession()) {
-        document.getElementById('loginContainer').style.display = 'none';
-        document.getElementById('appContainer').style.display = 'block';
-        document.getElementById('userName').innerHTML = currentUser.username;
-        document.getElementById('userRole').innerHTML = currentUser.role === 'admin' ? '👑 Администратор' : currentUser.role === 'manager' ? '🛡️ Модератор' : '👤 Пользователь';
-        updateUserAvatar();
-        
-        if (!canModerate()) document.querySelector('.nav-item[data-tab="moderation"]').style.display = 'none';
-        
-        loadEvents();
-        startDots();
-        loadFromCloud();
-        autoSyncInterval = setInterval(() => loadFromCloud(), 30000);
-        
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', () => switchTab(item.dataset.tab));
-        });
-        switchTab('events');
-    }
+    (async () => {
+        await loadUsersFromCloud();
+        if (checkSession()) {
+            document.getElementById('loginContainer').style.display = 'none';
+            document.getElementById('appContainer').style.display = 'block';
+            document.getElementById('userName').innerHTML = currentUser.username;
+            document.getElementById('userRole').innerHTML = currentUser.role === 'admin' ? '👑 Администратор' : currentUser.role === 'manager' ? '🛡️ Модератор' : '👤 Пользователь';
+            if (currentUser.avatar) document.getElementById('userAvatar').src = currentUser.avatar;
+            
+            if (!canModerate()) document.querySelector('.nav-item[data-tab="moderation"]').style.display = 'none';
+            
+            await loadEventsFromCloud();
+            renderEvents();
+            renderStats();
+            if (canModerate()) renderModeration();
+            startDots();
+            
+            autoSyncInterval = setInterval(async () => {
+                await loadEventsFromCloud();
+                await loadUsersFromCloud();
+            }, 30000);
+            
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', () => switchTab(item.dataset.tab));
+            });
+            switchTab('events');
+        }
+    })();
 </script>
 
 </body>
