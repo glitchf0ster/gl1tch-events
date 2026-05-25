@@ -112,6 +112,13 @@
             transition: all 0.3s ease;
         }
         .btn-blue:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4); }
+        .btn-yellow {
+            background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+            transition: all 0.3s ease;
+        }
+        .btn-yellow:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(234, 179, 8, 0.4); }
+        .status-pending { color: #eab308; }
+        .status-completed { color: #10b981; }
     </style>
 </head>
 <body>
@@ -196,7 +203,7 @@
         <div class="container mx-auto px-6 py-8">
             <!-- Ивенты -->
             <div id="eventsTab" class="tab-content">
-                <button id="newEventBtn" class="btn-green px-6 py-3 rounded-xl font-semibold text-white mb-6">+ Новый ивент</button>
+                <button id="newEventBtn" class="btn-green px-6 py-3 rounded-xl font-semibold text-white mb-6">+ Быстрый ивент (уже проведён)</button>
                 <div id="eventsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
             </div>
 
@@ -209,42 +216,47 @@
                             <p class="text-gray-400">Всего ивентов</p>
                             <p class="text-4xl font-bold text-white" id="statTotal">0</p>
                         </div>
+                        <div class="text-center p-4 bg-white/5 rounded-xl">
+                            <p class="text-gray-400">Проведено</p>
+                            <p class="text-4xl font-bold text-green-400" id="statCompleted">0</p>
+                        </div>
                     </div>
                     <canvas id="monthlyChart" height="200"></canvas>
                 </div>
             </div>
 
-<!-- Анонс -->
-<div id="announceTab" class="tab-content" style="display:none;">
-    <div class="card p-6 bg-white/5 rounded-xl">
-        <h3 class="text-xl font-bold text-white mb-4">📢 Создать анонс ивента</h3>
-        <form id="announceForm">
-            <input type="text" id="announceTitle" placeholder="📌 Название ивента" class="input-dark mb-3" required>
-            <textarea id="announceDescription" placeholder="📝 Описание ивента" rows="3" class="input-dark mb-3" required></textarea>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
-                <div>
-                    <label class="text-gray-400 text-sm block mb-1">👥 Помощники</label>
-                    <input type="number" id="announceHelpers" placeholder="Сколько нужно" class="input-dark" min="0" value="0">
-                </div>
-                <div>
-                    <label class="text-gray-400 text-sm block mb-1">🎭 Актёры</label>
-                    <input type="number" id="announceActors" placeholder="Сколько нужно" class="input-dark" min="0" value="0">
-                </div>
-                <div>
-                    <label class="text-gray-400 text-sm block mb-1">🏗️ Строители</label>
-                    <input type="number" id="announceBuilders" placeholder="Сколько нужно" class="input-dark" min="0" value="0">
+            <!-- Анонс -->
+            <div id="announceTab" class="tab-content" style="display:none;">
+                <div class="card p-6 bg-white/5 rounded-xl">
+                    <h3 class="text-xl font-bold text-white mb-4">📢 Создать анонс ивента</h3>
+                    <p class="text-gray-400 text-sm mb-4">После анонса ивент появится во вкладке "Ивенты" со статусом "⏳ Ожидает проведения"</p>
+                    <form id="announceForm">
+                        <input type="text" id="announceTitle" placeholder="📌 Название ивента" class="input-dark mb-3" required>
+                        <textarea id="announceDescription" placeholder="📝 Описание ивента" rows="3" class="input-dark mb-3" required></textarea>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                            <div>
+                                <label class="text-gray-400 text-sm block mb-1">👥 Помощники</label>
+                                <input type="number" id="announceHelpers" placeholder="Сколько нужно" class="input-dark" min="0" value="0">
+                            </div>
+                            <div>
+                                <label class="text-gray-400 text-sm block mb-1">🎭 Актёры</label>
+                                <input type="number" id="announceActors" placeholder="Сколько нужно" class="input-dark" min="0" value="0">
+                            </div>
+                            <div>
+                                <label class="text-gray-400 text-sm block mb-1">🏗️ Строители</label>
+                                <input type="number" id="announceBuilders" placeholder="Сколько нужно" class="input-dark" min="0" value="0">
+                            </div>
+                        </div>
+                        
+                        <textarea id="announceExtra" placeholder="➕ Дополнительная информация (дата, время, требования и т.д.)" rows="2" class="input-dark mb-4"></textarea>
+                        
+                        <button type="submit" class="btn-blue w-full py-3 rounded-xl font-semibold text-white">
+                            <i class="fas fa-paper-plane mr-2"></i> Создать анонс и добавить в список
+                        </button>
+                    </form>
                 </div>
             </div>
-            
-            <textarea id="announceExtra" placeholder="➕ Дополнительная информация (дата, время, требования и т.д.)" rows="2" class="input-dark mb-4"></textarea>
-            
-            <button type="submit" class="btn-blue w-full py-3 rounded-xl font-semibold text-white">
-                <i class="fas fa-paper-plane mr-2"></i> Опубликовать анонс в Discord
-            </button>
-        </form>
-    </div>
-</div>
 
             <!-- Пользователи -->
             <div id="usersTab" class="tab-content" style="display:none;">
@@ -256,20 +268,38 @@
     </div>
 </div>
 
-<!-- МОДАЛЬНОЕ ОКНО СОЗДАНИЯ ИВЕНТА -->
-<div id="eventModal" class="modal fixed inset-0 flex items-center justify-center z-50" style="display:none;">
+<!-- МОДАЛЬНОЕ ОКНО БЫСТРОГО СОЗДАНИЯ ИВЕНТА (ПРОВЕДЁННЫЙ) -->
+<div id="quickEventModal" class="modal fixed inset-0 flex items-center justify-center z-50" style="display:none;">
     <div class="modal-content p-6 w-full max-w-md m-4">
-        <h3 id="modalTitle" class="text-xl font-bold text-white mb-4">Новый ивент</h3>
-        <form id="eventForm">
-            <input type="hidden" id="eventId">
-            <input type="text" id="eventTitle" placeholder="Название" class="input-dark mb-3" required>
-            <textarea id="eventDescription" placeholder="Описание" rows="4" class="input-dark mb-3" required></textarea>
-            <input type="text" id="eventAssistants" placeholder="Помощники" class="input-dark mb-3">
-            <input type="text" id="eventActors" placeholder="Актёры" class="input-dark mb-3">
-            <input type="text" id="eventBuilders" placeholder="Строители" class="input-dark mb-4">
+        <h3 class="text-xl font-bold text-white mb-4">📋 Быстрый ивент (уже проведён)</h3>
+        <form id="quickEventForm">
+            <input type="text" id="quickTitle" placeholder="Название" class="input-dark mb-3" required>
+            <textarea id="quickDescription" placeholder="Описание" rows="4" class="input-dark mb-3" required></textarea>
+            <input type="text" id="quickAssistants" placeholder="Помощники (через запятую)" class="input-dark mb-3">
+            <input type="text" id="quickActors" placeholder="Актёры (через запятую)" class="input-dark mb-3">
+            <input type="text" id="quickBuilders" placeholder="Строители (через запятую)" class="input-dark mb-4">
             <div class="flex justify-end gap-3">
-                <button type="button" id="closeModalBtn" class="px-4 py-2 bg-gray-600 rounded-xl text-white">Отмена</button>
-                <button type="submit" class="btn-red px-4 py-2 rounded-xl text-white">Сохранить</button>
+                <button type="button" id="closeQuickModalBtn" class="px-4 py-2 bg-gray-600 rounded-xl text-white">Отмена</button>
+                <button type="submit" class="btn-green px-4 py-2 rounded-xl text-white">Сохранить и отправить отчёт</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- МОДАЛЬНОЕ ОКНО ПРОВЕДЕНИЯ ИВЕНТА -->
+<div id="completeEventModal" class="modal fixed inset-0 flex items-center justify-center z-50" style="display:none;">
+    <div class="modal-content p-6 w-full max-w-md m-4">
+        <h3 class="text-xl font-bold text-white mb-4">✅ Провести ивент</h3>
+        <form id="completeEventForm">
+            <input type="hidden" id="completeEventId">
+            <input type="text" id="completeTitle" placeholder="Название" class="input-dark mb-3" required readonly>
+            <textarea id="completeDescription" placeholder="Описание" rows="4" class="input-dark mb-3" required readonly></textarea>
+            <input type="text" id="completeAssistants" placeholder="Помощники (кто был)" class="input-dark mb-3" required>
+            <input type="text" id="completeActors" placeholder="Актёры (кто был)" class="input-dark mb-3" required>
+            <input type="text" id="completeBuilders" placeholder="Строители (кто был)" class="input-dark mb-4" required>
+            <div class="flex justify-end gap-3">
+                <button type="button" id="closeCompleteModalBtn" class="px-4 py-2 bg-gray-600 rounded-xl text-white">Отмена</button>
+                <button type="submit" class="btn-green px-4 py-2 rounded-xl text-white">Завершить и отправить отчёт</button>
             </div>
         </form>
     </div>
@@ -280,13 +310,14 @@
     const USERS_SHEET_API = 'https://script.google.com/macros/s/AKfycbxcpQ2oO5n9TJw6b04xJ7DrF8fgtT8EQ960FH0BqMfWzN4051BHkNOis3Uj0R3Tz9a5BA/exec';
     const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1507778037197050057/wnyKFFsvAOKtdPFghv8mj2asH_xQOoFXsHJyemo53cj6jxWYRJccAZmVQuTdoiqiXDCb';
     const ANNOUNCE_WEBHOOK_URL = 'https://discord.com/api/webhooks/1507826979544633424/LwuAJ79T2NZoGyV08n45xwOUWfHB4ObLLZ98hLM-N2TOEaINRJV2OCSaIciQLJo1LCD4';
+    const REPORT_WEBHOOK_URL = 'https://discord.com/api/webhooks/1507778037197050057/wnyKFFsvAOKtdPFghv8mj2asH_xQOoFXsHJyemo53cj6jxWYRJccAZmVQuTdoiqiXDCb';
     
     let currentUser = null;
     let events = [];
     let users = [];
     let monthlyChart = null;
     
-    // ============ ОТПРАВКА АНОНСА ============
+    // ============ ОТПРАВКА АНОНСА В DISCORD ============
     async function sendAnnouncement(data) {
         const currentDate = new Date().toLocaleString('ru-RU');
         const embed = {
@@ -307,7 +338,7 @@
         }
         
         try {
-            const response = await fetch(ANNOUNCE_WEBHOOK_URL, {
+            await fetch(ANNOUNCE_WEBHOOK_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -317,54 +348,41 @@
                     content: '@everyone **НОВЫЙ АНОНС ИВЕНТА!**'
                 })
             });
-            return response.ok;
+            return true;
         } catch (error) {
             console.error('Ошибка отправки анонса:', error);
             return false;
         }
     }
     
-    // ============ ОТПРАВКА В DISCORD (ивент) ============
-    async function sendDiscordReport(eventData, username) {
+    // ============ ОТПРАВКА ОТЧЁТА В DISCORD ============
+    async function sendReport(eventData, username) {
         const currentDate = new Date().toLocaleString('ru-RU');
         const embed = {
-            title: '📋 НОВЫЙ ИВЕНТ',
+            title: '📋 ОТЧЁТ О ПРОВЕДЕННОМ ИВЕНТЕ',
             description: `**${eventData.title}**\n\n${eventData.description}`,
-            color: 0xcc0000,
+            color: 0x10b981,
             fields: [
                 { name: '👥 ПОМОЩНИКИ', value: eventData.assistants || 'Не указаны', inline: true },
                 { name: '🎭 АКТЁРЫ', value: eventData.actors || 'Не указаны', inline: true },
                 { name: '🏗️ СТРОИТЕЛИ', value: eventData.builders || 'Не указаны', inline: true },
-                { name: '📝 СОЗДАТЕЛЬ', value: username, inline: true },
-                { name: '📅 ДАТА', value: currentDate, inline: true }
+                { name: '📝 ОТЧЁТ ОТ', value: username, inline: true },
+                { name: '📅 ДАТА ПРОВЕДЕНИЯ', value: currentDate, inline: true }
             ],
             footer: { text: 'Gl1tch Events' },
             timestamp: new Date().toISOString()
         };
         
         try {
-            const response = await fetch(DISCORD_WEBHOOK_URL, {
+            await fetch(REPORT_WEBHOOK_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: 'Gl1tch Events', embeds: [embed], content: '📋 **НОВЫЙ ИВЕНТ!**' })
+                body: JSON.stringify({ username: 'Gl1tch Events', embeds: [embed], content: '📋 **НОВЫЙ ОТЧЁТ О ИВЕНТЕ!**' })
             });
-            const data = await response.json();
-            return { ok: response.ok, messageId: data.id };
+            return true;
         } catch (error) {
-            console.error('Ошибка отправки в Discord:', error);
-            return { ok: false, messageId: null };
-        }
-    }
-    
-    async function deleteDiscordMessage(messageId) {
-        if (!messageId) return;
-        try {
-            await fetch(`${DISCORD_WEBHOOK_URL}/messages/${messageId}`, {
-                method: 'DELETE'
-            });
-            console.log('Сообщение в Discord удалено');
-        } catch (error) {
-            console.error('Ошибка удаления сообщения:', error);
+            console.error('Ошибка отправки отчёта:', error);
+            return false;
         }
     }
     
@@ -434,34 +452,71 @@
         renderStats();
     }
     
-    async function createEvent(title, description, assistants, actors, builders) {
+    // Создание ивента из анонса (статус: pending)
+    function createPendingEvent(title, description) {
         const newEvent = {
             id: Date.now(),
-            title, description,
-            assistants: assistants || '', actors: actors || '', builders: builders || '',
+            title: title,
+            description: description,
+            assistants: '',
+            actors: '',
+            builders: '',
             created_at: new Date().toISOString(),
-            created_by: currentUser.username
+            created_by: currentUser.username,
+            status: 'pending',
+            announced: true
         };
-        
-        // Отправляем в Discord и сохраняем message_id
-        const result = await sendDiscordReport(newEvent, currentUser.username);
-        if (result.ok && result.messageId) {
-            newEvent.message_id = result.messageId;
-        }
-        
         events.unshift(newEvent);
         saveEvents();
         return newEvent;
     }
     
-    async function deleteEvent(id) {
+    // Быстрое создание проведённого ивента
+    async function createCompletedEvent(title, description, assistants, actors, builders) {
+        const newEvent = {
+            id: Date.now(),
+            title: title,
+            description: description,
+            assistants: assistants || '',
+            actors: actors || '',
+            builders: builders || '',
+            created_at: new Date().toISOString(),
+            created_by: currentUser.username,
+            status: 'completed',
+            completed_at: new Date().toISOString()
+        };
+        events.unshift(newEvent);
+        saveEvents();
+        
+        // Отправляем отчёт в Discord
+        await sendReport(newEvent, currentUser.username);
+        
+        return newEvent;
+    }
+    
+    // Завершение ивента (статус: completed)
+    async function completeEvent(id, assistants, actors, builders) {
         const event = events.find(e => e.id == id);
-        if (event && event.message_id) {
-            await deleteDiscordMessage(event.message_id);
+        if (event) {
+            event.status = 'completed';
+            event.assistants = assistants || '';
+            event.actors = actors || '';
+            event.builders = builders || '';
+            event.completed_at = new Date().toISOString();
+            saveEvents();
+            
+            // Отправляем отчёт в Discord
+            await sendReport(event, currentUser.username);
+            return event;
         }
+        return null;
+    }
+    
+    // Удаление ивента
+    async function deleteEvent(id) {
         events = events.filter(e => e.id != id);
         saveEvents();
-        showToast('🗑️ Ивент удалён из таблицы и из Discord');
+        showToast('🗑️ Ивент удалён');
     }
     
     function renderEvents() {
@@ -478,11 +533,20 @@
                 <div class="flex justify-between items-start mb-3">
                     <div class="flex-1">
                         <h3 class="text-xl font-bold text-white">${escapeHtml(e.title)}</h3>
+                        <div class="text-sm mt-1">
+                            ${e.status === 'pending' ? '<span class="status-pending"><i class="fas fa-clock"></i> ⏳ Ожидает проведения</span>' : '<span class="status-completed"><i class="fas fa-check-circle"></i> ✅ Проведён</span>'}
+                        </div>
                     </div>
                     ${currentUser?.role === 'admin' ? `
                         <div class="flex gap-2">
-                            <button onclick="editEvent(${e.id})" class="text-blue-500 hover:text-blue-400"><i class="fas fa-edit"></i></button>
-                            <button onclick="deleteEventHandler(${e.id})" class="text-red-500 hover:text-red-400"><i class="fas fa-trash"></i></button>
+                            ${e.status === 'pending' ? `
+                                <button onclick="openCompleteModal(${e.id})" class="btn-yellow px-3 py-1 rounded-lg text-white text-sm">
+                                    <i class="fas fa-play"></i> Провести
+                                </button>
+                            ` : ''}
+                            <button onclick="deleteEventHandler(${e.id})" class="text-red-500 hover:text-red-400">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </div>
                     ` : ''}
                 </div>
@@ -497,6 +561,7 @@
     
     function renderStats() {
         document.getElementById('statTotal').innerText = events.length;
+        document.getElementById('statCompleted').innerText = events.filter(e => e.status === 'completed').length;
         
         const months = {};
         events.forEach(e => {
@@ -527,20 +592,19 @@
     }
     
     // ============ ОБРАБОТЧИКИ ============
-    window.editEvent = (id) => {
+    window.openCompleteModal = (id) => {
         const event = events.find(e => e.id == id);
-        document.getElementById('eventId').value = event.id;
-        document.getElementById('eventTitle').value = event.title;
-        document.getElementById('eventDescription').value = event.description;
-        document.getElementById('eventAssistants').value = event.assistants || '';
-        document.getElementById('eventActors').value = event.actors || '';
-        document.getElementById('eventBuilders').value = event.builders || '';
-        document.getElementById('modalTitle').innerText = 'Редактировать ивент';
-        document.getElementById('eventModal').style.display = 'flex';
+        document.getElementById('completeEventId').value = event.id;
+        document.getElementById('completeTitle').value = event.title;
+        document.getElementById('completeDescription').value = event.description;
+        document.getElementById('completeAssistants').value = '';
+        document.getElementById('completeActors').value = '';
+        document.getElementById('completeBuilders').value = '';
+        document.getElementById('completeEventModal').style.display = 'flex';
     };
     
     window.deleteEventHandler = async (id) => {
-        if (confirm('🗑️ Удалить ивент? Сообщение в Discord также будет удалено!')) {
+        if (confirm('🗑️ Удалить ивент?')) {
             await deleteEvent(id);
         }
     };
@@ -558,6 +622,7 @@
                     <h3 class="text-2xl font-bold text-white">${escapeHtml(event.title)}</h3>
                     <button onclick="this.closest('.modal').remove()" class="text-gray-400 hover:text-white text-2xl">&times;</button>
                 </div>
+                <div class="mb-4">${event.status === 'pending' ? '<span class="status-pending"><i class="fas fa-clock"></i> ⏳ Ожидает проведения</span>' : '<span class="status-completed"><i class="fas fa-check-circle"></i> ✅ Проведён</span>'}</div>
                 <p class="text-gray-300 mb-6">${escapeHtml(event.description)}</p>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="bg-red-900/30 p-4 rounded-xl"><b class="text-red-400">Помощники:</b><br>${escapeHtml(event.assistants) || 'Не указаны'}</div>
@@ -565,6 +630,7 @@
                     <div class="bg-red-900/30 p-4 rounded-xl"><b class="text-red-400">Строители:</b><br>${escapeHtml(event.builders) || 'Не указаны'}</div>
                 </div>
                 <div class="mt-4 text-sm text-gray-500">Создан: ${new Date(event.created_at).toLocaleString()} | Автор: ${escapeHtml(event.created_by)}</div>
+                ${event.completed_at ? `<div class="mt-1 text-sm text-green-400">Проведён: ${new Date(event.completed_at).toLocaleString()}</div>` : ''}
             </div>
         `;
         document.body.appendChild(modal);
@@ -616,31 +682,39 @@
         location.reload();
     });
     
+    // Быстрый ивент (уже проведён)
     document.getElementById('newEventBtn').onclick = () => {
-        document.getElementById('eventId').value = '';
-        document.getElementById('eventForm').reset();
-        document.getElementById('modalTitle').innerText = 'Новый ивент';
-        document.getElementById('eventModal').style.display = 'flex';
+        document.getElementById('quickEventModal').style.display = 'flex';
     };
+    document.getElementById('closeQuickModalBtn').onclick = () => document.getElementById('quickEventModal').style.display = 'none';
     
-    document.getElementById('closeModalBtn').onclick = () => document.getElementById('eventModal').style.display = 'none';
-    
-    document.getElementById('eventForm').addEventListener('submit', async (e) => {
+    document.getElementById('quickEventForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const id = document.getElementById('eventId').value;
-        const title = document.getElementById('eventTitle').value;
-        const description = document.getElementById('eventDescription').value;
-        const assistants = document.getElementById('eventAssistants').value;
-        const actors = document.getElementById('eventActors').value;
-        const builders = document.getElementById('eventBuilders').value;
+        const title = document.getElementById('quickTitle').value;
+        const description = document.getElementById('quickDescription').value;
+        const assistants = document.getElementById('quickAssistants').value;
+        const actors = document.getElementById('quickActors').value;
+        const builders = document.getElementById('quickBuilders').value;
         
-        if (id) {
-            showToast('✅ Ивент обновлён');
-        } else {
-            await createEvent(title, description, assistants, actors, builders);
-            showToast('✅ Ивент создан и отправлен в Discord!');
-        }
-        document.getElementById('eventModal').style.display = 'none';
+        await createCompletedEvent(title, description, assistants, actors, builders);
+        showToast('✅ Ивент создан и отчёт отправлен в Discord!');
+        document.getElementById('quickEventModal').style.display = 'none';
+        document.getElementById('quickEventForm').reset();
+    });
+    
+    // Завершение ивента
+    document.getElementById('closeCompleteModalBtn').onclick = () => document.getElementById('completeEventModal').style.display = 'none';
+    
+    document.getElementById('completeEventForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = parseInt(document.getElementById('completeEventId').value);
+        const assistants = document.getElementById('completeAssistants').value;
+        const actors = document.getElementById('completeActors').value;
+        const builders = document.getElementById('completeBuilders').value;
+        
+        await completeEvent(id, assistants, actors, builders);
+        showToast('✅ Ивент проведён, отчёт отправлен в Discord!');
+        document.getElementById('completeEventModal').style.display = 'none';
     });
     
     // Анонс
@@ -653,16 +727,14 @@
         const builders = document.getElementById('announceBuilders').value;
         const extra = document.getElementById('announceExtra').value;
         
-        const success = await sendAnnouncement({
-            title, description, helpers, actors, builders, extra
-        });
+        // Отправляем анонс в Discord
+        await sendAnnouncement({ title, description, helpers, actors, builders, extra });
         
-        if (success) {
-            showToast('✅ Анонс опубликован в Discord!');
-            document.getElementById('announceForm').reset();
-        } else {
-            showToast('❌ Ошибка публикации анонса');
-        }
+        // Создаём ивент в таблице со статусом "pending"
+        createPendingEvent(title, description);
+        
+        showToast('✅ Анонс опубликован и ивент добавлен в список!');
+        document.getElementById('announceForm').reset();
     });
     
     // ============ АНИМАЦИЯ ТОЧЕК ============
